@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Aniassué lôgôfié douman</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1B2A49">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Lôgôfié Douman">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<style>
+:root{--bg:#F2F5F0;--surface:#fff;--ink:#17221B;--muted:#58695D;--line:#D6DED4;--indigo:#1B2A49;--chalk:#F4D35E;--green:#2E7D4F;--on-green:#fff;--bad:#B3261E;--up:#2E7D4F;--down:#B3261E;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101612;--surface:#18211B;--ink:#EAF0E8;--muted:#9AAA9F;--line:#2A362D;--indigo:#0E1830;--green:#4CAF78;--on-green:#08150D;--bad:#FF8A80;--up:#6FD39A;--down:#FF8A80;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#101612;--surface:#18211B;--ink:#EAF0E8;--muted:#9AAA9F;--line:#2A362D;--indigo:#0E1830;--green:#4CAF78;--on-green:#08150D;--bad:#FF8A80;--up:#6FD39A;--down:#FF8A80;color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding-bottom:84px}
+h1,h2,h3{font-family:Georgia,"Times New Roman",serif;line-height:1.2;margin:0}
+.wrap{max-width:560px;margin:0 auto;padding:0 16px}
+header{background:var(--indigo);color:#fff;padding:18px 0 22px}
+header h1{font-size:24px}
+header p{margin:6px 0 0;color:#C9D3E8;font-size:15px}
+h2{font-size:20px;margin:24px 0 10px}
+.slate{background:var(--indigo);color:var(--chalk);border-radius:14px;padding:14px;margin-top:-14px;box-shadow:0 0 0 3px var(--line)}
+.slate h2{margin:0 0 4px;color:var(--chalk);font-size:19px}
+.slate small{color:#C9D3E8}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin-top:8px;font-size:14px;min-width:420px}
+th,td{padding:7px 6px;text-align:right;border-bottom:1px dashed rgba(244,211,94,.35);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600;color:#C9D3E8}
+td.gain{color:#fff;font-weight:700}
+.t-up{color:var(--up)}.t-down{color:var(--down)}
+.slate .t-up{color:#8CE0AE}.slate .t-down{color:#FFB4AB}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:10px}
+.card h3{font-size:17px}
+.row{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.muted{color:var(--muted);font-size:14px}
+.btn{background:var(--green);color:var(--on-green);border:0;border-radius:10px;padding:12px 16px;font:600 16px system-ui,sans-serif;cursor:pointer;min-height:44px}
+.btn.ghost{background:transparent;color:var(--green);border:1.5px solid var(--green)}
+.btn.block{width:100%;margin-top:10px}
+label{display:block;font-weight:600;margin:12px 0 4px;font-size:15px}
+input,select{width:100%;padding:12px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font:16px system-ui,sans-serif;min-height:44px}
+:focus-visible{outline:3px solid var(--chalk);outline-offset:2px}
+.sum{background:var(--bg);border:1px dashed var(--line);border-radius:10px;padding:12px;margin-top:14px}
+.sum div{display:flex;justify-content:space-between;padding:2px 0}
+.sum .tot{font-weight:700;font-size:18px;border-top:1px solid var(--line);margin-top:6px;padding-top:8px}
+.err{color:var(--bad);font-weight:600;margin-top:8px;min-height:1.2em}
+.steps{display:flex;gap:4px;margin:12px 0 4px}
+.steps span{flex:1;height:8px;border-radius:4px;background:var(--line)}
+.steps span.on{background:var(--green)}
+.empty{text-align:center;padding:28px 12px;color:var(--muted)}
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom,0px);z-index:5}
+nav button{flex:1;border:0;background:transparent;color:var(--muted);padding:10px 2px;font:600 12px system-ui,sans-serif;min-height:56px;cursor:pointer}
+nav button b{display:block;font-size:20px;line-height:1.2}
+nav button[aria-current="page"]{color:var(--green);box-shadow:inset 0 3px 0 var(--green)}
+#toast{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s;z-index:9;max-width:90%}
+#toast.show{opacity:1}
+.reset{background:none;border:0;color:var(--muted);text-decoration:underline;font:14px system-ui,sans-serif;margin:18px 0;cursor:pointer}
+@media (prefers-reduced-motion:reduce){#toast{transition:none}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+<h1>Aniassué lôgôfié douman</h1>
+<p>Du village à la ville, le bon marché.</p>
+</div></header>
+<main class="wrap" id="app"></main>
+<div id="toast" role="status" aria-live="polite"></div>
+<nav aria-label="Navigation principale">
+<button data-tab="marche"><b>🌾</b>Marché</button>
+<button data-tab="vendre"><b>📣</b>Vendre</button>
+<button data-tab="acheter"><b>🛒</b>Acheter</button>
+<button data-tab="commandes"><b>🚚</b>Commandes</button>
+<button data-tab="inscription"><b>📝</b>Inscription</button>
+</nav>
+<script>
+var SEED={
+ stocks:[
+  {id:1,p:"Igname",v:"Aniassué",who:"Coopérative des femmes",q:2000,pr:300},
+  {id:2,p:"Manioc",v:"Aniassué",who:"Producteur exemple A",q:3500,pr:120},
+  {id:3,p:"Banane plantain",v:"Aniassué",who:"Productrice exemple B",q:1500,pr:220},
+  {id:4,p:"Arachide",v:"Aniassué",who:"Productrice exemple C",q:800,pr:550},
+  {id:5,p:"Riz paddy",v:"Aniassué",who:"Producteur exemple D",q:5000,pr:250}
+ ],orders:[],next:6};
+var PRICES=[
+ {p:"Igname",v:300,a:520,b:450,t:"up"},
+ {p:"Manioc",v:120,a:230,b:200,t:"flat"},
+ {p:"Banane plantain",v:220,a:400,b:350,t:"up"},
+ {p:"Arachide",v:550,a:900,b:800,t:"down"},
+ {p:"Riz paddy",v:250,a:380,b:350,t:"flat"}];
+var TRANSPORT={"Abidjan":20,"Bouaké":25,"Yamoussoukro":22,"Abengourou":8};
+var COM=0.05;
+var STEPS=["Commande reçue","Chargée au village","En route","Livrée"];
+var S=clone(SEED),tab="marche",pick=null;
+try{var raw=localStorage.getItem("ald-v1");if(raw){var d=JSON.parse(raw);if(d&&d.stocks&&d.orders){S=d}}}catch(e){}
+function clone(o){return JSON.parse(JSON.stringify(o))}
+function save(){try{localStorage.setItem("ald-v1",JSON.stringify(S))}catch(e){}}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function F(n){return Math.round(n).toLocaleString("fr-FR")+" F"}
+function toast(m){var t=document.getElementById("toast");t.textContent=m;t.classList.add("show");setTimeout(function(){t.classList.remove("show")},2400)}
+function go(t){tab=t;render();window.scrollTo(0,0)}
+function arrow(t){return t==="up"?'<span class="t-up">↑</span>':t==="down"?'<span class="t-down">↓</span>':"–"}
+
+function vMarche(){
+ var rows=PRICES.map(function(x){return "<tr><td>"+x.p+"</td><td>"+F(x.v)+"</td><td>"+F(x.a)+"</td><td>"+F(x.b)+"</td><td>"+arrow(x.t)+"</td></tr>"}).join("");
+ var list=S.stocks.filter(function(s){return s.q>0}).map(function(s){
+  return '<div class="card"><div class="row"><h3>'+esc(s.p)+'</h3><strong>'+F(s.pr)+'/kg</strong></div>'+
+  '<div class="muted">'+esc(s.v)+' · '+esc(s.who)+'</div>'+
+  '<div class="row" style="margin-top:8px"><span>'+s.q.toLocaleString("fr-FR")+' kg disponibles</span>'+
+  '<button class="btn" onclick="buy('+s.id+')">Commander</button></div></div>'}).join("");
+ return cta()+'<section class="slate"><h2>Prix du jour, par kilo</h2><small>Prix d’exemple : à remplacer par les vrais prix relevés chaque matin.</small>'+
+  '<div class="scroll"><table><tr><th>Produit</th><th>Village</th><th>Abidjan</th><th>Bouaké</th><th></th></tr>'+rows+'</table></div></section>'+
+  '<h2>Stocks disponibles</h2>'+(list||'<div class="empty">Aucun stock pour le moment. Les producteurs peuvent publier le leur dans l’onglet Vendre.</div>');
+}
+
+function vVendre(){
+ return '<h2>Publier mon stock</h2><div class="card">'+
+ '<label for="f-p">Produit</label><input id="f-p" placeholder="Ex. : igname, manioc, maïs">'+
+ '<label for="f-q">Quantité disponible (kg)</label><input id="f-q" type="number" inputmode="numeric" min="1">'+
+ '<label for="f-pr">Prix par kilo (F CFA)</label><input id="f-pr" type="number" inputmode="numeric" min="1">'+
+ '<label for="f-v">Village</label><input id="f-v" value="Aniassué">'+
+ '<label for="f-w">Nom du producteur</label><input id="f-w">'+
+ '<label for="f-t">Téléphone (WhatsApp)</label><input id="f-t" type="tel" inputmode="tel" placeholder="+225 …">'+
+ '<div class="err" id="f-err"></div>'+
+ '<button class="btn block" onclick="publish()">Publier mon stock</button></div>';
+}
+function publish(){
+ var g=function(i){return document.getElementById(i).value.trim()};
+ var p=g("f-p"),q=parseInt(g("f-q"),10),pr=parseInt(g("f-pr"),10),v=g("f-v"),w=g("f-w"),err=document.getElementById("f-err");
+ if(!p||!w||!v){err.textContent="Renseigne le produit, le village et ton nom.";return}
+ if(!(q>0)||!(pr>0)){err.textContent="La quantité et le prix doivent être supérieurs à 0.";return}
+ S.stocks.unshift({id:S.next++,p:p,v:v,who:w,q:q,pr:pr});save();
+ toast("Stock publié");go("marche");
+}
+
+function buy(id){pick=id;go("acheter")}
+function vAcheter(){
+ var av=S.stocks.filter(function(s){return s.q>0});
+ if(!av.length)return '<h2>Acheter en gros</h2><div class="empty">Aucun stock disponible pour le moment.</div>';
+ if(!av.some(function(s){return s.id===pick}))pick=av[0].id;
+ var opts=av.map(function(s){return '<option value="'+s.id+'"'+(s.id===pick?" selected":"")+'>'+esc(s.p)+" · "+esc(s.v)+" · "+F(s.pr)+"/kg ("+s.q+" kg)</option>"}).join("");
+ var dest=Object.keys(TRANSPORT).map(function(c){return "<option>"+c+"</option>"}).join("");
+ return '<h2>Acheter en gros</h2><div class="card">'+
+ '<label for="b-s">Produit</label><select id="b-s" onchange="pick=+this.value;calc()">'+opts+'</select>'+
+ '<label for="b-q">Quantité (kg)</label><input id="b-q" type="number" inputmode="numeric" min="1" value="500" oninput="calc()">'+
+ '<label for="b-d">Ville de livraison</label><select id="b-d" onchange="calc()">'+dest+'</select>'+
+ '<div class="sum" id="b-sum"></div><div class="err" id="b-err"></div>'+
+ '<button class="btn block" onclick="order()">Confirmer la commande</button></div>'+
+ '<p class="muted">Ton argent reste bloqué et n’est versé au producteur qu’après la livraison. Tarifs de transport d’exemple.</p>';
+}
+function calcData(){
+ var s=S.stocks.filter(function(x){return x.id===pick})[0];if(!s)return null;
+ var q=parseInt(document.getElementById("b-q").value,10)||0,d=document.getElementById("b-d").value;
+ var goods=q*s.pr,tr=q*TRANSPORT[d],com=Math.round(goods*COM);
+ return {s:s,q:q,d:d,goods:goods,tr:tr,com:com,tot:goods+tr+com};
+}
+function calc(){
+ var c=calcData();if(!c)return;
+ document.getElementById("b-sum").innerHTML=
+ "<div><span>Produits</span><span>"+F(c.goods)+"</span></div>"+
+ "<div><span>Transport vers "+esc(c.d)+"</span><span>"+F(c.tr)+"</span></div>"+
+ "<div><span>Frais de la plateforme (5 %)</span><span>"+F(c.com)+"</span></div>"+
+ '<div class="tot"><span>Total à payer</span><span>'+F(c.tot)+"</span></div>";
+ document.getElementById("b-err").textContent="";
+}
+function order(){
+ var c=calcData(),err=document.getElementById("b-err");if(!c)return;
+ if(!(c.q>0)){err.textContent="Indique une quantité supérieure à 0.";return}
+ if(c.q>c.s.q){err.textContent="Il ne reste que "+c.s.q+" kg de "+c.s.p+".";return}
+ c.s.q-=c.q;
+ S.orders.unshift({id:S.next++,p:c.s.p,v:c.s.v,who:c.s.who,q:c.q,d:c.d,tot:c.tot,step:0});
+ save();toast("Commande enregistrée");go("commandes");
+}
+
+function vCommandes(){
+ if(!S.orders.length)return '<h2>Mes commandes</h2><div class="empty">Aucune commande pour le moment. Choisis un produit dans l’onglet Marché.</div>';
+ return '<h2>Mes commandes</h2>'+S.orders.map(function(o){
+  var dots=STEPS.map(function(_,i){return '<span class="'+(i<=o.step?"on":"")+'"></span>'}).join("");
+  var done=o.step===STEPS.length-1;
+  return '<div class="card"><div class="row"><h3>'+esc(o.p)+' · '+o.q.toLocaleString("fr-FR")+' kg</h3><strong>'+F(o.tot)+'</strong></div>'+
+  '<div class="muted">'+esc(o.v)+' → '+esc(o.d)+'</div><div class="steps" aria-hidden="true">'+dots+'</div>'+
+  '<div><strong>'+STEPS[o.step]+'</strong></div>'+
+  (done?'<div class="muted">Paiement versé au producteur.</div>':'<button class="btn ghost block" onclick="adv('+o.id+')">Passer à l’étape suivante</button>')+'</div>'}).join("");
+}
+function adv(id){
+ S.orders.forEach(function(o){if(o.id===id&&o.step<STEPS.length-1)o.step++});
+ save();render();
+}
+
+
+var WA="2250700081104",deferred=null;
+function cta(){return '<div class="card" style="margin-top:14px"><strong>Producteur, grossiste ou transporteur ?</strong><div class="muted">Inscris-toi en 1 minute pour rejoindre le marché.</div><button class="btn block" onclick="go(\'inscription\')">Je m’inscris</button></div>'}
+function vInscription(){
+ var r={};try{r=JSON.parse(localStorage.getItem("ald-reg")||"{}")}catch(e){}
+ var v=function(k){return esc(r[k]||"")};
+ var roles=["Producteur","Grossiste / acheteur","Transporteur"].map(function(x){return "<option"+(r.role===x?" selected":"")+">"+x+"</option>"}).join("");
+ return '<h2>Inscription</h2><div class="card" id="inst"></div><div class="card">'+
+ '<label for="r-role">Je suis</label><select id="r-role">'+roles+'</select>'+
+ '<label for="r-name">Nom complet</label><input id="r-name" value="'+v("name")+'">'+
+ '<label for="r-tel">Numéro WhatsApp</label><input id="r-tel" type="tel" inputmode="tel" placeholder="+225 …" value="'+v("tel")+'">'+
+ '<label for="r-vil">Village ou ville</label><input id="r-vil" value="'+v("vil")+'">'+
+ '<label for="r-act">Mes produits ou mon activité</label><input id="r-act" placeholder="Ex. : igname, manioc ; ou camion 5 tonnes" value="'+v("act")+'">'+
+ '<label for="r-qty">Quantité approximative (facultatif)</label><input id="r-qty" placeholder="Ex. : 2 tonnes par semaine" value="'+v("qty")+'">'+
+ '<div class="err" id="r-err"></div>'+
+ '<button class="btn block" onclick="register()">Envoyer mon inscription par WhatsApp</button><div id="r-link"></div></div>'+
+ '<p class="muted">Ton inscription arrive directement sur le WhatsApp de l’équipe, qui te répond pour valider ton profil.</p>';
+}
+function register(){
+ var g=function(i){return document.getElementById(i).value.trim()};
+ var r={role:g("r-role"),name:g("r-name"),tel:g("r-tel"),vil:g("r-vil"),act:g("r-act"),qty:g("r-qty")},err=document.getElementById("r-err");
+ if(!r.name||!r.vil||!r.act){err.textContent="Renseigne ton nom, ton village ou ta ville, et tes produits.";return}
+ if(r.tel.replace(/\D/g,"").length<8){err.textContent="Entre un numéro WhatsApp valide.";return}
+ err.textContent="";
+ try{localStorage.setItem("ald-reg",JSON.stringify(r))}catch(e){}
+ var m="Inscription Aniassué lôgôfié douman\nProfil : "+r.role+"\nNom : "+r.name+"\nTéléphone : "+r.tel+"\nVillage / ville : "+r.vil+"\nProduits / activité : "+r.act+(r.qty?"\nQuantité approximative : "+r.qty:"");
+ var url="https://wa.me/"+WA+"?text="+encodeURIComponent(m);
+ document.getElementById("r-link").innerHTML='<a class="btn block" style="display:block;text-align:center;text-decoration:none" href="'+url+'" target="_blank" rel="noopener">Si WhatsApp ne s’ouvre pas, touche ici</a>';
+ window.open(url,"_blank");
+}
+function showInstall(){
+ var el=document.getElementById("inst");if(!el)return;
+ el.innerHTML=deferred?'<strong>Installer l’application</strong><div class="muted">Elle s’ouvre comme une vraie application, sans passer par le Play Store.</div><button class="btn block" onclick="installApp()">Installer sur mon téléphone</button>':
+ '<strong>Installer sur ton téléphone</strong><div class="muted">Android (Chrome) : menu ⋮ puis « Ajouter à l’écran d’accueil ».<br>iPhone (Safari) : bouton Partager puis « Sur l’écran d’accueil ».</div>';
+}
+function installApp(){if(!deferred)return;deferred.prompt();deferred.userChoice.then(function(){deferred=null;showInstall()})}
+window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();deferred=e;showInstall()});
+if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}
+
+function render(){
+ var views={inscription:vInscription,marche:vMarche,vendre:vVendre,acheter:vAcheter,commandes:vCommandes};
+ document.getElementById("app").innerHTML=views[tab]()+'<button class="reset" onclick="resetAll()">Remettre les données de démonstration</button>';
+ document.querySelectorAll("nav button").forEach(function(b){
+  if(b.dataset.tab===tab)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current");
+ });
+ if(tab==="acheter")calc();
+ if(tab==="inscription")showInstall();
+}
+function resetAll(){S=clone(SEED);pick=null;save();toast("Données remises à zéro");go("marche")}
+document.querySelectorAll("nav button").forEach(function(b){b.addEventListener("click",function(){go(b.dataset.tab)})});
+render();
+</script>
+</body>
+</html>
