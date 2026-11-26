@@ -30,7 +30,7 @@ h2{font-size:20px;margin:24px 0 10px}
 .slate h2{margin:0 0 4px;color:var(--chalk);font-size:19px}
 .slate small{color:#C9D3E8}
 .scroll{overflow-x:auto}
-table{width:100%;border-collapse:collapse;margin-top:8px;font-size:14px;min-width:420px}
+table{width:100%;border-collapse:collapse;margin-top:8px;font-size:14px;min-width:0;table-layout:fixed} th,td{overflow-wrap:anywhere} .price-note{display:block;margin-top:8px;color:#C9D3E8;font-size:12px;line-height:1.45}
 th,td{padding:7px 6px;text-align:right;border-bottom:1px dashed rgba(244,211,94,.35);white-space:nowrap}
 th:first-child,td:first-child{text-align:left}
 th{font-weight:600;color:#C9D3E8}
@@ -80,27 +80,20 @@ nav button[aria-current="page"]{color:var(--green);box-shadow:inset 0 3px 0 var(
 <button data-tab="inscription"><b>📝</b>Inscription</button>
 </nav>
 <script>
-var SEED={
- stocks:[
-  {id:1,p:"Igname",v:"Aniassué",who:"Coopérative des femmes",q:2000,pr:300},
-  {id:2,p:"Manioc",v:"Aniassué",who:"Producteur exemple A",q:3500,pr:120},
-  {id:3,p:"Banane plantain",v:"Aniassué",who:"Productrice exemple B",q:1500,pr:220},
-  {id:4,p:"Arachide",v:"Aniassué",who:"Productrice exemple C",q:800,pr:550},
-  {id:5,p:"Riz paddy",v:"Aniassué",who:"Producteur exemple D",q:5000,pr:250}
- ],orders:[],next:6};
+var SEED={stocks:[],orders:[],next:1};
 var PRICES=[
- {p:"Igname",v:300,a:520,b:450,t:"up"},
- {p:"Manioc",v:120,a:230,b:200,t:"flat"},
- {p:"Banane plantain",v:220,a:400,b:350,t:"up"},
- {p:"Arachide",v:550,a:900,b:800,t:"down"},
- {p:"Riz paddy",v:250,a:380,b:350,t:"flat"}];
+ {p:"Maïs grain",v:170,a:470},
+ {p:"Riz local blanchi",v:600,a:700},
+ {p:"Banane plantain",v:480,a:610},
+ {p:"Igname Kponan",v:680,a:800},
+ {p:"Manioc doux",v:190,a:470}];
 var TRANSPORT={"Abidjan":20,"Bouaké":25,"Yamoussoukro":22,"Abengourou":8};
 var COM=0.05;
 var STEPS=["Commande reçue","Chargée au village","En route","Livrée"];
 var S=clone(SEED),tab="marche",pick=null;
-try{var raw=localStorage.getItem("ald-v1");if(raw){var d=JSON.parse(raw);if(d&&d.stocks&&d.orders){S=d}}}catch(e){}
+try{var raw=localStorage.getItem("ald-v2");if(raw){var d=JSON.parse(raw);if(d&&d.stocks&&d.orders){S=d}}}catch(e){}
 function clone(o){return JSON.parse(JSON.stringify(o))}
-function save(){try{localStorage.setItem("ald-v1",JSON.stringify(S))}catch(e){}}
+function save(){try{localStorage.setItem("ald-v2",JSON.stringify(S))}catch(e){}}
 function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
 function F(n){return Math.round(n).toLocaleString("fr-FR")+" F"}
 function toast(m){var t=document.getElementById("toast");t.textContent=m;t.classList.add("show");setTimeout(function(){t.classList.remove("show")},2400)}
@@ -108,15 +101,16 @@ function go(t){tab=t;render();window.scrollTo(0,0)}
 function arrow(t){return t==="up"?'<span class="t-up">↑</span>':t==="down"?'<span class="t-down">↓</span>':"–"}
 
 function vMarche(){
- var rows=PRICES.map(function(x){return "<tr><td>"+x.p+"</td><td>"+F(x.v)+"</td><td>"+F(x.a)+"</td><td>"+F(x.b)+"</td><td>"+arrow(x.t)+"</td></tr>"}).join("");
+ var rows=PRICES.map(function(x){return "<tr><td>"+esc(x.p)+"</td><td>"+F(x.v)+"</td><td>"+F(x.a)+"</td></tr>"}).join("");
  var list=S.stocks.filter(function(s){return s.q>0}).map(function(s){
   return '<div class="card"><div class="row"><h3>'+esc(s.p)+'</h3><strong>'+F(s.pr)+'/kg</strong></div>'+
   '<div class="muted">'+esc(s.v)+' · '+esc(s.who)+'</div>'+
   '<div class="row" style="margin-top:8px"><span>'+s.q.toLocaleString("fr-FR")+' kg disponibles</span>'+
   '<button class="btn" onclick="buy('+s.id+')">Commander</button></div></div>'}).join("");
- return cta()+'<section class="slate"><h2>Prix du jour, par kilo</h2><small>Prix d’exemple : à remplacer par les vrais prix relevés chaque matin.</small>'+
-  '<div class="scroll"><table><tr><th>Produit</th><th>Village</th><th>Abidjan</th><th>Bouaké</th><th></th></tr>'+rows+'</table></div></section>'+
-  '<h2>Stocks disponibles</h2>'+(list||'<div class="empty">Aucun stock pour le moment. Les producteurs peuvent publier le leur dans l’onglet Vendre.</div>');
+ return cta()+'<section class="slate"><h2>Prix de référence, par kilo</h2><small>Prix à la consommation (F CFA/kg)</small>'+
+  '<div class="scroll"><table><tr><th>Produit</th><th>Aniassué*</th><th>Abidjan</th></tr>'+rows+'</table></div>'+
+  '<small class="price-note">* Aniassué : référence régionale d’Abengourou, et non relevé direct du village. Source : OCPV, semaine du 02 au 08 novembre 2026. Ces prix sont des prix à la consommation, pas des prix garantis aux producteurs. À actualiser dès réception d’un nouveau relevé.</small></section>'+
+  '<h2>Stocks disponibles</h2>'+(list||'<div class="empty">Aucun stock vérifié pour le moment. Les producteurs peuvent publier leurs offres dans l’onglet Vendre.</div>');
 }
 
 function vVendre(){
