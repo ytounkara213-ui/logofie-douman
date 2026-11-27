@@ -220,6 +220,92 @@ app.post("/api/admin/submissions/:id/decision", adminLimiter, requireAdmin, read
   return res.json({ message: "Prix validé et publié.", priceId: published.id });
 });
 
+
+app.get("/api/admin/finance/summary", adminLimiter, requireAdmin, ready, async (_req, res) => {
+  const { data, error } = await db.from("finance_entries")
+    .select("entry_type,gross_amount,commission_amount,status")
+    .order("transaction_date", { ascending: false })
+    .limit(5000);
+  if (error) {
+    console.error("finance summary:", error.message);
+    return res.status(500).json({ error: "Impossible de charger le suivi financier." });
+  }
+  const rows = data || [];
+  const totals = {
+    confirmedSales: 0,
+    completedTransport: 0,
+    completedExpenses: 0,
+    earnedCommissions: 0,
+    pendingCommissions: 0,
+    entries: rows.length
+  };
+  for (const row of rows) {
+    const amount = Number(row.gross_amount) || 0;
+    const commission = Number(row.commission_amount) || 0;
+    if (row.entry_type === "sale" && row.status === "confirmed") {
+      totals.confirmedSales += amount;
+      totals.earnedCommissions += commission;
+    } else if (row.entry_type === "transport" && row.status === "completed") {
+      totals.completedTransport += amount;
+      totals.earnedCommissions += commission;
+    } else if (row.entry_type === "expense" && row.status === "completed") {
+      totals.completedExpenses += amount;
+    } else if ((row.entry_type === "sale" || row.entry_type === "transport") && row.status === "pending") {
+      totals.pendingCommissions += commission;
+    }
+  }
+  for (const key of Object.keys(totals)) {
+    if (key !== "entries") totals[key] = Math.round(totals[key] * 100) / 100;
+  }
+  return res.json({
+    currency: "XOF",
+    note: "Suivi déclaratif uniquement : aucun paiement ni encaissement n'est effectué par cette API.",
+    totals,
+    estimatedNet: Math.round((totals.earnedCommissions - totals.completedExpenses) * 100) / 100
+  });
+});
+
+app.post("/api/admin/finance/entries", adminLimiter, requireAdmin, ready, async (req, res) => {
+  const body = req.body || {};
+  const entryType = body.entry_type;
+  const label = cleanText(body.label, 120);
+  const amount = Number(body.gross_amount);
+  const rate = body.commission_rate == null || body.commission_rate === ""
+    ? 0 : Number(body.commission_rate);
+  const status = body.status || "pending";
+  const transactionDate = body.transaction_date || new Date().toISOString().slice(0, 10);
+  const notes = cleanText(body.notes, 500);
+
+  if (!["sale", "transport", "expense"].includes(entryType)
+      || label.length < 2
+      || !Number.isFinite(amount) || amount <= 0
+      || !Number.isFinite(rate) || rate < 0 || rate > 10
+      || !["pending", "confirmed", "completed", "cancelled"].includes(status)
+      || !validDate(transactionDate)
+      || (entryType === "expense" && rate !== 0)) {
+    return res.status(400).json({ error: "Type, libellé, montant, taux, statut ou date invalide." });
+  }
+
+  const { data, error } = await db.from("finance_entries").insert({
+    entry_type: entryType,
+    label,
+    gross_amount: amount,
+    commission_rate: rate,
+    status,
+    transaction_date: transactionDate,
+    notes: notes || null
+  }).select("id,entry_type,label,gross_amount,commission_rate,commission_amount,status,transaction_date,created_at").single();
+
+  if (error) {
+    console.error("finance entry insert:", error.message);
+    return res.status(500).json({ error: "Impossible d'enregistrer cette écriture." });
+  }
+  return res.status(201).json({
+    message: "Écriture de suivi enregistrée. Aucun argent n'a été encaissé.",
+    entry: data
+  });
+});
+
 app.use((err, _req, res, _next) => {
   if (err?.message === "Origin not allowed") {
     return res.status(403).json({ error: "Origine non autorisée." });
