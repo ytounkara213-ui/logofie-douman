@@ -1,7 +1,7 @@
 -- LOGOFIE DOUMAN — espace d'administration du marché
 -- À exécuter après schema.sql dans Supabase SQL Editor.
 -- Les contacts sont des données privées : aucune politique publique n'est créée.
--- Toutes les lectures/modifications passent par l'API serveur avec ADMIN_API_KEY.
+-- Toutes les lectures/modifications passent par l'API serveur avec authentification Supabase Auth et vérification de l'UUID administrateur.
 
 create table if not exists public.partner_registrations (
   id uuid primary key default gen_random_uuid(),
