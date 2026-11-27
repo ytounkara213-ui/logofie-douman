@@ -59,3 +59,12 @@ Voir [market-watch/README.md](market-watch/README.md) pour les instructions de l
 ## Tableau de bord LOGÔFIÉ GESTION — démonstration
 
 L'onglet **Gestion** présente une maquette visuelle avec des chiffres entièrement fictifs. Il ne lit aucune donnée réelle et n'est pas un espace d'administration. Les taux affichés (2 % sur les ventes et 5 % sur les transports) sont des hypothèses de travail non activées. Le tableau de bord réel devra être réservé à l'administration, alimenté par l'API sécurisée et testé avant toute utilisation. Aucun paiement n'est collecté par cette maquette.
+
+## Espace privé d'administration
+
+- Page de connexion : https://ytounkara213-ui.github.io/logofie-douman/admin.html
+- Connexion par Supabase Auth ; seuls les UUID présents dans `ADMIN_USER_IDS` sont autorisés par l'API.
+- La page permet de consulter le suivi financier, les inscriptions, les annonces produits, les transporteurs et les relevés de prix en attente, puis de valider ou refuser les demandes.
+- Avant la première connexion, renseigner dans la page l'URL de l'API déployée, l'URL du projet Supabase et sa clé publique anon. Ces paramètres sont conservés dans le stockage local du navigateur.
+- Ne jamais saisir la clé `SUPABASE_SERVICE_ROLE_KEY` dans cette page. Elle reste uniquement dans les variables privées de l'hébergeur.
+- L'interface est créée, mais elle ne peut fonctionner avec les données réelles qu'après déploiement de l'API, configuration Supabase et autorisation du compte administrateur.
