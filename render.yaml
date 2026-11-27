@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: logofie-douman-api
+    runtime: node
+    plan: free
+    rootDir: market-watch
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: FRONTEND_ORIGIN
+        value: https://ytounkara213-ui.github.io
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: ADMIN_USER_IDS
+        sync: false
