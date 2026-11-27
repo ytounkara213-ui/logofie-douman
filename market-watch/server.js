@@ -425,5 +425,6 @@ app.use((err, _req, res, _next) => {
 
 app.listen(port, () => {
   console.log(`LOGOFIE MARKET WATCH API listening on port ${port}`);
-  if (!configured) console.warn("Configuration incomplète : renseigner les variables Supabase et ADMIN_API_KEY.");
+  if (!configured) console.warn("Configuration incomplète : renseigner SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY.");
+  if (!authClient || adminUserIds.size === 0) console.warn("Authentification administrateur non configurée : vérifier SUPABASE_ANON_KEY et ADMIN_USER_IDS.");
 });
