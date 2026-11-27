@@ -63,6 +63,17 @@ nav button[aria-current="page"]{color:var(--green);box-shadow:inset 0 3px 0 var(
 #toast.show{opacity:1}
 .reset{background:none;border:0;color:var(--muted);text-decoration:underline;font:14px system-ui,sans-serif;margin:18px 0;cursor:pointer}
 @media (prefers-reduced-motion:reduce){#toast{transition:none}}
+
+.metric-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}
+.metric{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:13px;min-width:0}
+.metric .k{font-size:12px;color:var(--muted);font-weight:600}
+.metric .v{font-size:20px;font-weight:750;letter-spacing:-.4px;margin-top:5px;overflow-wrap:anywhere}
+.metric .hint{font-size:12px;color:var(--muted);margin-top:3px}
+.demo-banner{border:1px solid #C58B25;background:rgba(244,211,94,.16);border-radius:12px;padding:12px;margin:12px 0;color:var(--ink)}
+.demo-banner strong{display:block;margin-bottom:3px}
+.finance-list{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px dashed var(--line)}
+.finance-list:last-child{border:0}
+@media(min-width:420px){.metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 </head>
 <body>
@@ -81,6 +92,7 @@ nav button[aria-current="page"]{color:var(--green);box-shadow:inset 0 3px 0 var(
 <button data-tab="stands"><b>🏪</b>Stands</button>
 <button data-tab="transport"><b>🚛</b>Transport</button>
 <button data-tab="inscription"><b>📝</b>Inscription</button>
+<button data-tab="gestion"><b>📊</b>Gestion</button>
 </nav>
 <script>
 var SEED={stocks:[],orders:[],next:1};
@@ -362,8 +374,37 @@ function installApp(){if(!deferred)return;deferred.prompt();deferred.userChoice.
 window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();deferred=e;showInstall()});
 if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}
 
+
+function vGestion(){
+ var demo={sales:500000,transport:50000,saleRate:0.02,transportRate:0.05,expenses:3000};
+ var saleCommission=Math.round(demo.sales*demo.saleRate);
+ var transportCommission=Math.round(demo.transport*demo.transportRate);
+ var total=saleCommission+transportCommission;
+ var result=total-demo.expenses;
+ return '<h2>LOGÔFIÉ GESTION</h2>'+
+ '<div class="demo-banner"><strong>⚠ Démonstration — données entièrement fictives</strong>Ces montants servent uniquement à montrer le fonctionnement du futur tableau de bord. Ils ne représentent ni des ventes réelles, ni des commissions gagnées, ni l’argent disponible de la plateforme.</div>'+
+ '<div class="card"><div class="row"><h3>Vue d’ensemble</h3><span class="muted">Exemple fictif</span></div>'+
+ '<div class="metric-grid">'+
+ '<div class="metric"><div class="k">Ventes suivies</div><div class="v">'+F(demo.sales)+'</div><div class="hint">Montant des produits</div></div>'+
+ '<div class="metric"><div class="k">Transports suivis</div><div class="v">'+F(demo.transport)+'</div><div class="hint">Montant des transports</div></div>'+
+ '<div class="metric"><div class="k">Commissions simulées</div><div class="v">'+F(total)+'</div><div class="hint">2 % ventes + 5 % transport</div></div>'+
+ '<div class="metric"><div class="k">Dépenses saisies</div><div class="v">'+F(demo.expenses)+'</div><div class="hint">Exemple de frais</div></div>'+
+ '</div></div>'+
+ '<div class="card"><h3>Calcul de démonstration</h3>'+
+ '<div class="finance-list"><span>Commission ventes (2 %)</span><strong>'+F(saleCommission)+'</strong></div>'+
+ '<div class="finance-list"><span>Commission transport (5 %)</span><strong>'+F(transportCommission)+'</strong></div>'+
+ '<div class="finance-list"><span>Total commissions simulées</span><strong>'+F(total)+'</strong></div>'+
+ '<div class="finance-list"><span>Dépenses de démonstration</span><strong>− '+F(demo.expenses)+'</strong></div>'+
+ '<div class="finance-list"><span><strong>Résultat estimatif de l’exemple</strong></span><strong>'+F(result)+'</strong></div>'+
+ '<p class="muted">Ce résultat n’est pas un bénéfice réel. Les taux de 2 % et 5 % sont des hypothèses de travail, non activées et à faire accepter clairement par les participants avant tout usage.</p></div>'+
+ '<div class="card"><h3>Ce que le vrai tableau de bord affichera</h3>'+
+ '<ul><li>Ventes confirmées et terminées</li><li>Transports terminés</li><li>Commissions en attente et commissions acquises</li><li>Dépenses enregistrées</li><li>Résultat estimatif, avec historique des opérations</li></ul>'+
+ '<p class="muted">La version réelle sera réservée à l’administration et alimentée par l’API sécurisée. Cette page publique ne lit aucune donnée financière réelle.</p></div>'+
+ '<div class="card"><h3>État de connexion</h3><p class="muted">Mode démonstration uniquement. Supabase, la migration financière et l’API ne sont pas encore raccordés ni testés en production. Aucun paiement n’est collecté.</p></div>';
+}
+
 function render(){
- var views={inscription:vInscription,marche:vMarche,vendre:vVendre,acheter:vAcheter,commandes:vCommandes,releves:vReleves,stands:vStands,transport:vTransport};
+ var views={inscription:vInscription,marche:vMarche,vendre:vVendre,acheter:vAcheter,commandes:vCommandes,releves:vReleves,stands:vStands,transport:vTransport,gestion:vGestion};
  document.getElementById("app").innerHTML=views[tab]()+'<button class="reset" onclick="resetAll()">Réinitialiser les stocks et commandes de démonstration</button>';
  document.querySelectorAll("nav button").forEach(function(b){
   if(b.dataset.tab===tab)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current");
