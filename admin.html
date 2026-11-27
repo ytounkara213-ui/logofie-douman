@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#1B2A49">
+<title>Administration — LOGÔFIÉ DOUMAN</title>
+<style>
+:root{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#17221b;background:#f2f5f0}
+*{box-sizing:border-box}body{margin:0}header{background:#1b2a49;color:white;padding:22px 16px}header p{margin:5px 0 0;color:#d6dfef}.wrap{max-width:850px;margin:22px auto;padding:0 14px}.panel{background:white;border:1px solid #d6ded4;border-radius:14px;padding:17px;margin:0 0 14px;box-shadow:0 2px 8px #1420180b}h1{font-size:23px;margin:0}h2{font-size:19px;margin:0 0 12px}h3{font-size:16px;margin:0 0 8px}label{display:block;font-weight:650;font-size:14px;margin:12px 0 5px}input{width:100%;padding:12px;border:1px solid #bbc8bc;border-radius:9px;font:inherit;min-height:44px}button{border:0;border-radius:9px;background:#2e7d4f;color:white;font:650 15px system-ui;padding:11px 15px;min-height:42px;cursor:pointer;margin:8px 6px 0 0}button.secondary{background:#edf3ed;color:#205b39;border:1px solid #b9d0bf}button.danger{background:#9b2d28}button:disabled{opacity:.55;cursor:wait}.muted{color:#59695e;font-size:13px}.notice{background:#fff7dc;border:1px solid #e5c76b;border-radius:10px;padding:11px;font-size:13px;margin-bottom:12px}.error{color:#a32620;font-weight:650;white-space:pre-wrap}.success{color:#21663d;font-weight:650}.hidden{display:none!important}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}.stat{background:#f2f5f0;border-radius:10px;padding:12px}.stat b{display:block;font-size:21px;margin-top:4px;overflow-wrap:anywhere}.item{border-top:1px solid #e0e7df;padding:12px 0}.item:first-child{border-top:0}.tag{font-size:12px;background:#edf3ed;border-radius:20px;padding:3px 8px;display:inline-block}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between}small{color:#59695e}a{color:#205b39}footer{text-align:center;color:#66736a;font-size:12px;padding:20px}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<header><div class="wrap" style="margin:0 auto"><h1>LOGÔFIÉ DOUMAN</h1><p>Espace privé de gestion et de validation</p></div></header>
+<main class="wrap">
+<section class="panel">
+<div class="notice"><b>Accès réservé.</b> Cette page est une interface d'administration. N'utilise jamais la clé service-role ici. La configuration enregistrée dans ce navigateur contient uniquement l'URL de l'API, l'URL Supabase et la clé publique anon.</div>
+<h2>Configuration de connexion</h2>
+<label for="apiUrl">Adresse de l'API déployée</label><input id="apiUrl" type="url" placeholder="https://ton-api.example.com">
+<label for="supabaseUrl">URL du projet Supabase</label><input id="supabaseUrl" type="url" placeholder="https://xxxx.supabase.co">
+<label for="anonKey">Clé publique Supabase (anon / publishable)</label><input id="anonKey" type="text" autocomplete="off" placeholder="Clé publique uniquement">
+<button id="saveConfig">Enregistrer la configuration</button>
+<p class="muted">Ces trois informations sont nécessaires pour relier cette page au serveur. L'URL de l'API doit être celle de ton hébergeur, pas le lien GitHub Pages.</p>
+</section>
+<section class="panel" id="loginPanel">
+<h2>Connexion administrateur</h2>
+<p class="muted">Connecte-toi avec le compte créé dans Supabase Authentication et autorisé par son UUID dans ADMIN_USER_IDS.</p>
+<label for="email">Adresse e-mail du compte</label><input id="email" type="email" autocomplete="username">
+<label for="password">Mot de passe</label><input id="password" type="password" autocomplete="current-password">
+<button id="login">Se connecter</button>
+<div id="loginMessage" role="status" aria-live="polite"></div>
+</section>
+<section class="panel hidden" id="dashboard">
+<div class="row"><div><h2>Tableau de bord administrateur</h2><small id="who"></small></div><button class="secondary" id="logout">Se déconnecter</button></div>
+<div id="health" class="muted" style="margin:10px 0"></div>
+<div class="row"><h3>Suivi financier</h3><button class="secondary" id="refreshFinance">Actualiser</button></div>
+<div class="grid" id="financeStats"><div class="stat">Chargement…</div></div>
+<div class="row" style="margin-top:20px"><h3>Demandes à examiner</h3><button class="secondary" id="refreshQueue">Actualiser</button></div>
+<div id="queue"></div>
+<div class="row" style="margin-top:20px"><h3>Relevés de prix en attente</h3><button class="secondary" id="refreshSubmissions">Actualiser</button></div>
+<div id="submissions"></div>
+</section>
+<div id="globalMessage" role="status" aria-live="polite"></div>
+</main>
+<footer>LOGÔFIÉ DOUMAN · Interface privée · Ne partage pas tes identifiants.</footer>
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+const CFG="logofie_admin_public_config_v1";
+let supabase=null,session=null;
+function say(target,message,kind){const el=$(target);el.className=kind||"muted";el.textContent=message||""}
+function config(){return {apiUrl:$("apiUrl").value.trim().replace(/\/+$/,""),supabaseUrl:$("supabaseUrl").value.trim().replace(/\/+$/,""),anonKey:$("anonKey").value.trim()}}
+function loadConfig(){try{const c=JSON.parse(localStorage.getItem(CFG)||"{}");$("apiUrl").value=c.apiUrl||"";$("supabaseUrl").value=c.supabaseUrl||"";$("anonKey").value=c.anonKey||""}catch{}}
+function saveConfig(){const c=config();if(!/^https:\/\//i.test(c.apiUrl)||!/^https:\/\//i.test(c.supabaseUrl)||!c.anonKey){say("globalMessage","Vérifie les deux URL HTTPS et la clé publique anon.","error");return false}localStorage.setItem(CFG,JSON.stringify(c));supabase=window.supabase.createClient(c.supabaseUrl,c.anonKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});say("globalMessage","Configuration publique enregistrée sur cet appareil.","success");return true}
+function ensureClient(){if(!supabase){const c=config();if(!c.apiUrl||!c.supabaseUrl||!c.anonKey){throw new Error("Enregistre d'abord les trois paramètres de configuration.")}supabase=window.supabase.createClient(c.supabaseUrl,c.anonKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}})}return supabase}
+async function api(path,options){if(!session?.access_token)throw new Error("Session absente. Reconnecte-toi.");const c=config();const response=await fetch(c.apiUrl+path,{...options,headers:{"Content-Type":"application/json","Authorization":"Bearer "+session.access_token,...(options&&options.headers||{})}});let data={};try{data=await response.json()}catch{}if(!response.ok)throw new Error(data.error||("Erreur API "+response.status));return data}
+function esc(v){return String(v??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]))}
+function money(v){return (Number(v)||0).toLocaleString("fr-FR")+" F CFA"}
+async function health(){const c=config();const r=await fetch(c.apiUrl+"/api/health");const d=await r.json();$("health").textContent="API : "+d.status+" · Base : "+(d.databaseConfigured?"configurée":"non configurée")+" · Auth admin : "+(d.adminAuthConfigured?"configurée":"non configurée");if(!r.ok||!d.adminAuthConfigured)throw new Error("Le serveur ou son authentification administrateur n'est pas encore correctement configuré.")}
+async function finance(){const d=await api("/api/admin/finance/summary");const t=d.totals||{};$("financeStats").innerHTML=[["Ventes confirmées",money(t.confirmedSales)],["Transports terminés",money(t.completedTransport)],["Commissions acquises",money(t.earnedCommissions)],["Commissions en attente",money(t.pendingCommissions)],["Dépenses terminées",money(t.completedExpenses)],["Résultat estimatif",money(d.estimatedNet)]].map(x=>'<div class="stat"><small>'+esc(x[0])+'</small><b>'+esc(x[1])+'</b></div>').join("")}
+function itemCard(resource,item){const title=resource==="products"?(item.product||"Produit"):resource==="transporters"?(item.name||"Transporteur"):(item.name||"Inscription");const details=resource==="products"?[item.description,item.quantity+" "+item.unit,item.price+" F CFA",item.locality,item.phone]:resource==="transporters"?[item.vehicle,item.capacity,item.routes,item.locality,item.phone]:[item.role,item.activity,item.locality,item.phone];return '<article class="item"><div class="row"><b>'+esc(title)+'</b><span class="tag">'+esc(resource)+'</span></div><p class="muted">'+details.map(esc).filter(Boolean).join(" · ")+'</p>'+(item.photo_url?'<p><a href="'+esc(item.photo_url)+'" target="_blank" rel="noopener">Voir la photo</a></p>':'')+'<button data-decision="approve" data-resource="'+resource+'" data-id="'+esc(item.id)+'">Valider</button><button class="danger" data-decision="reject" data-resource="'+resource+'" data-id="'+esc(item.id)+'">Refuser</button></article>'}
+async function queue(){const d=await api("/api/admin/market/queue");const q=d.queue||{};const html=["registrations","products","transporters"].map(k=>{const rows=q[k]||[];return '<h3 style="margin-top:12px">'+({registrations:"Inscriptions",products:"Annonces produits",transporters:"Transporteurs"}[k])+' ('+rows.length+')</h3>'+(rows.length?rows.map(x=>itemCard(k,x)).join(""):'<p class="muted">Aucune demande en attente.</p>')}).join("");$("queue").innerHTML=html}
+async function submissions(){const d=await api("/api/admin/submissions?status=pending");const rows=d.submissions||[];$("submissions").innerHTML=rows.length?rows.map(x=>'<article class="item"><b>'+esc(x.product)+' · '+esc(x.locality)+'</b><p class="muted">'+esc(x.market_name)+' · '+esc(x.market_price)+' F / '+esc(x.unit)+' · '+esc(x.observed_at)+'</p><p class="muted">'+esc(x.notes||"")+'</p><button data-subdecision="approve" data-id="'+esc(x.id)+'">Valider et publier</button><button class="danger" data-subdecision="reject" data-id="'+esc(x.id)+'">Refuser</button></article>').join(""):'<p class="muted">Aucun relevé en attente.</p>'}
+async function refreshAll(){try{say("globalMessage","Chargement des données privées…");await health();await Promise.all([finance(),queue(),submissions()]);say("globalMessage","Données administrateur actualisées.","success")}catch(e){say("globalMessage",e.message,"error")}}
+async function showSession(s){session=s;if(s){$("loginPanel").classList.add("hidden");$("dashboard").classList.remove("hidden");$("who").textContent="Compte connecté : "+(s.user.email||s.user.id);await refreshAll()}else{$("dashboard").classList.add("hidden");$("loginPanel").classList.remove("hidden")}}
+$("saveConfig").addEventListener("click",()=>{if(saveConfig()){}});
+$("login").addEventListener("click",async()=>{try{ensureClient();say("loginMessage","Connexion en cours…");const {data,error}=await supabase.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});if(error)throw error;$("password").value="";await showSession(data.session)}catch(e){say("loginMessage",e.message,"error")}});
+$("logout").addEventListener("click",async()=>{if(supabase)await supabase.auth.signOut();session=null;showSession(null);say("globalMessage","Session fermée.","success")});
+$("refreshFinance").addEventListener("click",()=>finance().catch(e=>say("globalMessage",e.message,"error")));
+$("refreshQueue").addEventListener("click",()=>queue().catch(e=>say("globalMessage",e.message,"error")));
+$("refreshSubmissions").addEventListener("click",()=>submissions().catch(e=>say("globalMessage",e.message,"error")));
+$("queue").addEventListener("click",async e=>{const b=e.target.closest("button[data-decision]");if(!b)return;try{b.disabled=true;await api("/api/admin/market/"+b.dataset.resource+"/"+encodeURIComponent(b.dataset.id)+"/decision",{method:"POST",body:JSON.stringify({decision:b.dataset.decision})});await queue();say("globalMessage","Décision enregistrée.","success")}catch(err){say("globalMessage",err.message,"error")}finally{b.disabled=false}});
+$("submissions").addEventListener("click",async e=>{const b=e.target.closest("button[data-subdecision]");if(!b)return;try{b.disabled=true;await api("/api/admin/submissions/"+encodeURIComponent(b.dataset.id)+"/decision",{method:"POST",body:JSON.stringify({decision:b.dataset.subdecision})});await submissions();say("globalMessage","Décision enregistrée.","success")}catch(err){say("globalMessage",err.message,"error")}finally{b.disabled=false}});
+loadConfig();
+try{const c=JSON.parse(localStorage.getItem(CFG)||"{}");if(c.supabaseUrl&&c.anonKey){ensureClient();supabase.auth.getSession().then(({data})=>{if(data.session)showSession(data.session)});supabase.auth.onAuthStateChange((_event,s)=>{session=s;if(!s)showSession(null)})}}catch(e){say("globalMessage",e.message,"error")}
+})();
+</script>
+</body>
+</html>
