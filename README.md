@@ -54,3 +54,8 @@ Les taux pilotes de 2 % sur les ventes et 5 % sur les transports restent des hyp
 - Ne pas présenter les références régionales comme des prix mesurés directement à Aniassué.
 
 Voir [market-watch/README.md](market-watch/README.md) pour les instructions de l'API.
+
+
+## Tableau de bord LOGÔFIÉ GESTION — démonstration
+
+L'onglet **Gestion** présente une maquette visuelle avec des chiffres entièrement fictifs. Il ne lit aucune donnée réelle et n'est pas un espace d'administration. Les taux affichés (2 % sur les ventes et 5 % sur les transports) sont des hypothèses de travail non activées. Le tableau de bord réel devra être réservé à l'administration, alimenté par l'API sécurisée et testé avant toute utilisation. Aucun paiement n'est collecté par cette maquette.
