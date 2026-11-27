@@ -262,7 +262,7 @@ app.post("/api/products", publicLimiter, ready, async (req, res) => {
   const price = Number(body.price);
   if (!product || !description || !producer || !validPhone(phone) || !locality
       || !Number.isFinite(quantity) || quantity <= 0 || !unit
-      || !Number.isFinite(price) || price <= 0 || !/^https:\\/\\//i.test(photoUrl)) {
+      || !Number.isFinite(price) || price <= 0 || !/^https:\/\//i.test(photoUrl)) {
     return res.status(400).json({ error: "Informations du produit, photo HTTPS, quantité, prix ou contact invalides." });
   }
   const { data, error } = await db.from("product_listings").insert({
