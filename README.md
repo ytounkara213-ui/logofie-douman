@@ -31,7 +31,7 @@ Le site public reste un **prototype de démonstration**. Les données saisies da
 6. Créer un espace d'administration protégé pour approuver ou refuser stocks, stands, transporteurs, inscriptions et relevés.
 7. Tester les permissions, les quantités, les commandes et les sauvegardes avant d'ouvrir le service.
 
-**Important :** ne jamais publier une clé Supabase service-role, une clé administrateur, un mot de passe ou un fichier `.env` dans le dépôt ou dans le navigateur. La configuration des comptes et paiements éventuels doit être accompagnée par un adulte responsable.
+**Important :** ne jamais publier une clé Supabase service-role, un mot de passe ou un fichier `.env` dans le dépôt ou dans le navigateur. Les routes administrateur utilisent Supabase Auth et une liste d'identifiants autorisés ; aucun secret administrateur statique n'est intégré au site. La configuration des comptes et paiements éventuels doit être accompagnée par un adulte responsable.
 
 ## LOGÔFIÉ GESTION — suivi des revenus
 
@@ -43,7 +43,7 @@ Un premier socle de suivi financier est ajouté dans `market-watch/` :
 - Distinction entre commissions en attente et commissions acquises.
 - Calcul d'un résultat estimatif après dépenses enregistrées.
 
-Les taux pilotes de 2 % sur les ventes et 5 % sur les transports restent des hypothèses à discuter et à accepter par les participants. Aucun prélèvement ni paiement n'est réalisé par ce module. La base Supabase et l'API doivent être configurées et testées avant utilisation. La clé administrateur reste exclusivement côté serveur.
+Les taux pilotes de 2 % sur les ventes et 5 % sur les transports restent des hypothèses à discuter et à accepter par les participants. Aucun prélèvement ni paiement n'est réalisé par ce module. La base Supabase et l'API doivent être configurées et testées avant utilisation. L'accès administrateur est vérifié par Supabase Auth côté serveur ; la clé service-role reste exclusivement côté serveur.
 
 ## LOGOFIE MARKET WATCH
 
