@@ -348,12 +348,10 @@ function register(){
  if(!r.name||!r.vil||!r.act){err.textContent="Renseigne ton nom, ton village ou ta ville, et tes produits.";return}
  if(r.tel.replace(/\D/g,"").length<8){err.textContent="Entre un numéro WhatsApp valide.";return}
  if(r.role==="Producteur"&&!S.stocks.concat(standListings).some(function(x){return !!x.photo&&!!(x.desc||x.description)&&!!(x.p||x.product)&&!!(x.q||x.quantity)&&!!(x.pr||x.price)&&!!(x.v||x.locality)})){err.textContent="Inscription refusée : ajoute d’abord au moins un produit avec photo et toutes ses informations dans Vendre ou Stands.";return}
- if(!WA){err.textContent="Envoi désactivé : le numéro officiel WhatsApp de l’équipe doit d’abord être vérifié.";return}
- err.textContent="";
- var m="Inscription Aniassué lôgôfié douman\nProfil : "+r.role+"\nNom : "+r.name+"\nTéléphone : "+r.tel+"\nVillage / ville : "+r.vil+"\nProduits / activité : "+r.act+(r.qty?"\nQuantité approximative : "+r.qty:"");
- var url="https://wa.me/"+WA+"?text="+encodeURIComponent(m);
- document.getElementById("r-link").innerHTML='<a class="btn block" style="display:block;text-align:center;text-decoration:none" href="'+url+'" target="_blank" rel="noopener">Si WhatsApp ne s’ouvre pas, touche ici</a>';
- window.open(url,"_blank");
+ r.status="pending";r.savedAt=new Date().toISOString();
+ try{localStorage.setItem("ald-reg",JSON.stringify(r));}catch(e){err.textContent="Impossible d’enregistrer l’inscription sur cet appareil.";return}
+ err.textContent="";document.getElementById("r-link").textContent="Inscription enregistrée sur cet appareil, en attente de vérification. Aucun message WhatsApp n’a été envoyé.";
+ toast("Inscription de démonstration enregistrée");
 }
 function showInstall(){
  var el=document.getElementById("inst");if(!el)return;
