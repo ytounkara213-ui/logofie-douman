@@ -97,7 +97,7 @@ var S=clone(SEED),tab="marche",pick=null;
 var submissions=[],standListings=[],transporters=[],standPhotoData="";
 try{standListings=JSON.parse(localStorage.getItem("ald-stands")||"[]");if(!Array.isArray(standListings))standListings=[]}catch(e){standListings=[]}
 try{transporters=JSON.parse(localStorage.getItem("ald-transporters")||"[]");if(!Array.isArray(transporters))transporters=[]}catch(e){transporters=[]}
-function saveStands(){try{localStorage.setItem("ald-stands",JSON.stringify(standListings));return true}catch(e){toast("Enregistrement impossible : mémoire du téléphone pleine. Essaie sans photo.");return false}}
+function saveStands(){try{localStorage.setItem("ald-stands",JSON.stringify(standListings));return true}catch(e){toast("Enregistrement impossible : mémoire du téléphone pleine. Réduis la taille de la photo, mais ne la supprime pas.");return false}}
 function saveTransporters(){try{localStorage.setItem("ald-transporters",JSON.stringify(transporters));return true}catch(e){toast("Impossible d’enregistrer ce profil sur cet appareil.");return false}}
 try{submissions=JSON.parse(localStorage.getItem("ald-market-submissions")||"[]");if(!Array.isArray(submissions))submissions=[]}catch(e){submissions=[]}
 function saveSubmissions(){try{localStorage.setItem("ald-market-submissions",JSON.stringify(submissions));return true}catch(e){toast("Impossible d’enregistrer le relevé : mémoire du téléphone insuffisante.");return false}}
@@ -112,7 +112,7 @@ function arrow(t){return t==="up"?'<span class="t-up">↑</span>':t==="down"?'<s
 
 function vMarche(){
  var rows=PRICES.map(function(x){return "<tr><td>"+esc(x.p)+"</td><td>"+F(x.v)+"</td><td>"+F(x.a)+"</td></tr>"}).join("");
- var list=S.stocks.filter(function(s){return s.q>0}).map(function(s){
+ var list=S.stocks.filter(function(s){return s.q>0&&s.status!=="pending"}).map(function(s){
   return '<div class="card">'+(s.photo?'<img src="'+s.photo+'" alt="Photo de '+esc(s.p)+'" style="width:100%;max-height:190px;object-fit:cover;border-radius:9px">':'')+
   '<div class="row" style="margin-top:8px"><h3>'+esc(s.p)+'</h3><strong>'+F(s.pr)+'/kg</strong></div>'+
   (s.desc?'<p>'+esc(s.desc)+'</p>':'')+'<div class="muted">'+esc(s.v)+' · '+esc(s.who)+'</div>'+
@@ -346,7 +346,7 @@ function register(){
  var r={role:g("r-role"),name:g("r-name"),tel:g("r-tel"),vil:g("r-vil"),act:g("r-act"),qty:g("r-qty")},err=document.getElementById("r-err");
  if(!r.name||!r.vil||!r.act){err.textContent="Renseigne ton nom, ton village ou ta ville, et tes produits.";return}
  if(r.tel.replace(/\D/g,"").length<8){err.textContent="Entre un numéro WhatsApp valide.";return}
- if(r.role==="Producteur"&&!S.stocks.concat(standListings).some(function(x){return !!x.photo&&!!(x.desc||x.description)&&!!x.p&&!!(x.q||x.quantity)&&!!(x.pr||x.price)&&!!(x.v||x.locality)})){err.textContent="Inscription refusée : ajoute d’abord au moins un produit avec photo et toutes ses informations dans Vendre ou Stands.";return}
+ if(r.role==="Producteur"&&!S.stocks.concat(standListings).some(function(x){return !!x.photo&&!!(x.desc||x.description)&&!!(x.p||x.product)&&!!(x.q||x.quantity)&&!!(x.pr||x.price)&&!!(x.v||x.locality)})){err.textContent="Inscription refusée : ajoute d’abord au moins un produit avec photo et toutes ses informations dans Vendre ou Stands.";return}
  if(!WA){err.textContent="Envoi désactivé : le numéro officiel WhatsApp de l’équipe doit d’abord être vérifié.";return}
  err.textContent="";
  var m="Inscription Aniassué lôgôfié douman\nProfil : "+r.role+"\nNom : "+r.name+"\nTéléphone : "+r.tel+"\nVillage / ville : "+r.vil+"\nProduits / activité : "+r.act+(r.qty?"\nQuantité approximative : "+r.qty:"");
