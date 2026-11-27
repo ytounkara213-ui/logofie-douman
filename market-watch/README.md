@@ -47,6 +47,23 @@ Ne jamais publier le fichier `.env`, la clé service-role ou la clé administrat
 - `GET /api/prices?locality=Aniassué` : lire les prix validés.
 - `GET /api/admin/submissions?status=pending` : lister les relevés en attente (administrateur).
 - `POST /api/admin/submissions/:id/decision` : approuver ou refuser un relevé (administrateur).
+- `POST /api/admin/finance/entries` : enregistrer une écriture de suivi financier (administrateur).
+- `GET /api/admin/finance/summary` : consulter les totaux du suivi financier (administrateur).
+
+## LOGÔFIÉ GESTION — suivi financier préparatoire
+
+Après avoir exécuté `schema.sql`, exécuter également `finance_schema.sql` dans le SQL Editor Supabase.
+
+- Les types d'écritures sont vente, transport et dépense.
+- Une vente ne compte dans les commissions acquises que si son statut est `confirmed`.
+- Un transport ne compte dans les commissions acquises que si son statut est `completed`.
+- Une dépense ne réduit le résultat estimé que si son statut est `completed`.
+- Les commissions en attente sont présentées séparément.
+- Le taux est saisi pour chaque écriture ; les valeurs pilotes de 2 % et 5 % restent des hypothèses à négocier, pas des tarifs automatiques.
+- Le tableau de bord ne collecte ni ne transfère d'argent. Les données sont des écritures déclaratives saisies par l'administrateur.
+- L'API renvoie les 5 000 écritures les plus récentes au maximum pour son résumé ; un mécanisme d'agrégation serveur sera nécessaire si le volume devient important.
+
+Les routes financières exigent la clé administrateur dans l'en-tête `Authorization: Bearer ...`. Cette clé ne doit jamais être placée dans le navigateur ou dans GitHub.
 
 ### Exemple de relevé
 
