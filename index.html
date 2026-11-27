@@ -141,7 +141,7 @@ var stockPhotoData="";
 function previewStockPhoto(input){
  var file=input.files&&input.files[0];stockPhotoData="";
  var preview=document.getElementById("f-photo-preview");if(!file||!preview)return;
- if(!file.type.match(/^image\\//)){preview.textContent="Choisis une photo au format image.";input.value="";return}
+ if(!file.type.match(/^image\//)){preview.textContent="Choisis une photo au format image.";input.value="";return}
  if(file.size>8*1024*1024){preview.textContent="Photo trop volumineuse (maximum 8 Mo).";input.value="";return}
  var reader=new FileReader();
  reader.onload=function(){
@@ -159,7 +159,7 @@ function publish(){
  var p=g("f-p"),desc=g("f-desc"),q=parseInt(g("f-q"),10),pr=parseInt(g("f-pr"),10),v=g("f-v"),w=g("f-w"),tel=g("f-t"),err=document.getElementById("f-err");
  if(!stockPhotoData){err.textContent="Ajoute une photo réelle du produit avant de continuer.";return}
  if(!p||!desc||!w||!v||!tel){err.textContent="Tous les champs sont obligatoires : produit, description, producteur, WhatsApp et localité.";return}
- if(tel.replace(/\\D/g,"").length<8){err.textContent="Vérifie le numéro WhatsApp.";return}
+ if(tel.replace(/\D/g,"").length<8){err.textContent="Vérifie le numéro WhatsApp.";return}
  if(!(q>0)||!(pr>0)){err.textContent="La quantité et le prix doivent être supérieurs à 0.";return}
  var stock={id:S.next++,p:p,desc:desc,photo:stockPhotoData,v:v,who:w,tel:tel,q:q,pr:pr,status:"pending"};
  S.stocks.unshift(stock);if(!save()){S.stocks.shift();S.next--;return}
