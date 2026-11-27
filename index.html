@@ -177,9 +177,9 @@ function order(){
  var c=calcData(),err=document.getElementById("b-err");if(!c)return;
  if(!(c.q>0)){err.textContent="Indique une quantité supérieure à 0.";return}
  if(c.q>c.s.q){err.textContent="Il ne reste que "+c.s.q+" kg de "+c.s.p+".";return}
- c.s.q-=c.q;
+ var oldQuantity=c.s.q,oldNext=S.next;c.s.q-=c.q;
  S.orders.unshift({id:S.next++,p:c.s.p,v:c.s.v,who:c.s.who,q:c.q,d:c.d,tot:c.tot,step:0});
- save();toast("Commande enregistrée");go("commandes");
+ if(!save()){c.s.q=oldQuantity;S.orders.shift();S.next=oldNext;return}toast("Commande de démonstration enregistrée");go("commandes");
 }
 
 
@@ -295,8 +295,8 @@ function vCommandes(){
   (done?'<div class="muted">Paiement versé au producteur.</div>':'<button class="btn ghost block" onclick="adv('+o.id+')">Passer à l’étape suivante</button>')+'</div>'}).join("");
 }
 function adv(id){
- S.orders.forEach(function(o){if(o.id===id&&o.step<STEPS.length-1)o.step++});
- save();render();
+ var before=clone(S);S.orders.forEach(function(o){if(o.id===id&&o.step<STEPS.length-1)o.step++});
+ if(!save()){S=before;return}render();
 }
 
 
@@ -322,8 +322,8 @@ function register(){
  var r={role:g("r-role"),name:g("r-name"),tel:g("r-tel"),vil:g("r-vil"),act:g("r-act"),qty:g("r-qty")},err=document.getElementById("r-err");
  if(!r.name||!r.vil||!r.act){err.textContent="Renseigne ton nom, ton village ou ta ville, et tes produits.";return}
  if(r.tel.replace(/\D/g,"").length<8){err.textContent="Entre un numéro WhatsApp valide.";return}
+ if(!WA){err.textContent="Envoi désactivé : le numéro officiel WhatsApp de l’équipe doit d’abord être vérifié.";return}
  err.textContent="";
- try{localStorage.setItem("ald-reg",JSON.stringify(r))}catch(e){}
  var m="Inscription Aniassué lôgôfié douman\nProfil : "+r.role+"\nNom : "+r.name+"\nTéléphone : "+r.tel+"\nVillage / ville : "+r.vil+"\nProduits / activité : "+r.act+(r.qty?"\nQuantité approximative : "+r.qty:"");
  var url="https://wa.me/"+WA+"?text="+encodeURIComponent(m);
  document.getElementById("r-link").innerHTML='<a class="btn block" style="display:block;text-align:center;text-decoration:none" href="'+url+'" target="_blank" rel="noopener">Si WhatsApp ne s’ouvre pas, touche ici</a>';
