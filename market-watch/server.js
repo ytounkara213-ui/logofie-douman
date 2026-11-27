@@ -4,12 +4,12 @@ import cors from "cors";
 import helmet from "helmet";
 import { rateLimit } from "express-rate-limit";
 import { createClient } from "@supabase/supabase-js";
-import { timingSafeEqual } from "node:crypto";
 
 const app = express();
 const port = Number(process.env.PORT || 3000);
 const frontendOrigin = process.env.FRONTEND_ORIGIN;
-const adminApiKey = process.env.ADMIN_API_KEY;
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+const adminUserIds = new Set((process.env.ADMIN_USER_IDS || "").split(",").map(id => id.trim()).filter(Boolean));
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -39,26 +39,37 @@ const adminLimiter = rateLimit({
   legacyHeaders: false
 });
 
-const configured = Boolean(supabaseUrl && supabaseServiceKey && adminApiKey);
+const configured = Boolean(supabaseUrl && supabaseServiceKey);
 const db = configured
   ? createClient(supabaseUrl, supabaseServiceKey, {
       auth: { persistSession: false, autoRefreshToken: false }
     })
   : null;
+const authClient = supabaseUrl && supabaseAnonKey
+  ? createClient(supabaseUrl, supabaseAnonKey, {
+      auth: { persistSession: false, autoRefreshToken: false }
+    })
+  : null;
 
-function sameSecret(a, b) {
-  if (typeof a !== "string" || typeof b !== "string") return false;
-  const left = Buffer.from(a);
-  const right = Buffer.from(b);
-  return left.length === right.length && timingSafeEqual(left, right);
-}
-
-function requireAdmin(req, res, next) {
-  const supplied = req.get("authorization")?.replace(/^Bearer\s+/i, "");
-  if (!adminApiKey || !sameSecret(supplied, adminApiKey)) {
-    return res.status(401).json({ error: "Accès administrateur refusé." });
+// Supabase Auth verifies the access token; only explicitly allowlisted user IDs are administrators.
+async function requireAdmin(req, res, next) {
+  if (!authClient || adminUserIds.size === 0) {
+    return res.status(503).json({ error: "Authentification administrateur non configurée." });
   }
-  next();
+  const match = /^Bearer\\s+(.+)$/i.exec(req.get("authorization") || "");
+  if (!match) return res.status(401).json({ error: "Connexion administrateur requise." });
+
+  try {
+    const { data, error } = await authClient.auth.getUser(match[1]);
+    if (error || !data?.user || !adminUserIds.has(data.user.id)) {
+      return res.status(401).json({ error: "Accès administrateur refusé." });
+    }
+    req.adminUserId = data.user.id;
+    return next();
+  } catch (error) {
+    console.error("admin authentication:", error?.message || error);
+    return res.status(401).json({ error: "Session administrateur invalide." });
+  }
 }
 
 function cleanText(value, max = 100) {
