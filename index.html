@@ -97,13 +97,13 @@ var S=clone(SEED),tab="marche",pick=null;
 var submissions=[],standListings=[],transporters=[],standPhotoData="";
 try{standListings=JSON.parse(localStorage.getItem("ald-stands")||"[]");if(!Array.isArray(standListings))standListings=[]}catch(e){standListings=[]}
 try{transporters=JSON.parse(localStorage.getItem("ald-transporters")||"[]");if(!Array.isArray(transporters))transporters=[]}catch(e){transporters=[]}
-function saveStands(){try{localStorage.setItem("ald-stands",JSON.stringify(standListings))}catch(e){toast("Mémoire du téléphone pleine : photo ou annonce trop volumineuse.")}}
-function saveTransporters(){try{localStorage.setItem("ald-transporters",JSON.stringify(transporters))}catch(e){toast("Impossible d’enregistrer ce profil sur cet appareil.")}}
+function saveStands(){try{localStorage.setItem("ald-stands",JSON.stringify(standListings));return true}catch(e){toast("Enregistrement impossible : mémoire du téléphone pleine. Essaie sans photo.");return false}}
+function saveTransporters(){try{localStorage.setItem("ald-transporters",JSON.stringify(transporters));return true}catch(e){toast("Impossible d’enregistrer ce profil sur cet appareil.");return false}}
 try{submissions=JSON.parse(localStorage.getItem("ald-market-submissions")||"[]");if(!Array.isArray(submissions))submissions=[]}catch(e){submissions=[]}
-function saveSubmissions(){try{localStorage.setItem("ald-market-submissions",JSON.stringify(submissions))}catch(e){}}
+function saveSubmissions(){try{localStorage.setItem("ald-market-submissions",JSON.stringify(submissions));return true}catch(e){toast("Impossible d’enregistrer le relevé : mémoire du téléphone insuffisante.");return false}}
 try{var raw=localStorage.getItem("ald-v2");if(raw){var d=JSON.parse(raw);if(d&&d.stocks&&d.orders){S=d}}}catch(e){}
 function clone(o){return JSON.parse(JSON.stringify(o))}
-function save(){try{localStorage.setItem("ald-v2",JSON.stringify(S))}catch(e){}}
+function save(){try{localStorage.setItem("ald-v2",JSON.stringify(S));return true}catch(e){toast("Impossible d’enregistrer : mémoire du téléphone insuffisante.");return false}}
 function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
 function F(n){return Math.round(n).toLocaleString("fr-FR")+" F"}
 function toast(m){var t=document.getElementById("toast");t.textContent=m;t.classList.add("show");setTimeout(function(){t.classList.remove("show")},2400)}
@@ -156,7 +156,7 @@ function vAcheter(){
  '<label for="b-d">Ville de livraison</label><select id="b-d" onchange="calc()">'+dest+'</select>'+
  '<div class="sum" id="b-sum"></div><div class="err" id="b-err"></div>'+
  '<button class="btn block" onclick="order()">Confirmer la commande</button></div>'+
- '<p class="muted">Ton argent reste bloqué et n’est versé au producteur qu’après la livraison. Tarifs de transport d’exemple.</p>';
+ '<p class="muted">Mode démonstration : aucune transaction ni aucun paiement réel n’est effectué. Les tarifs de transport sont des exemples.</p>';
 }
 function calcData(){
  var s=S.stocks.filter(function(x){return x.id===pick})[0];if(!s)return null;
@@ -224,7 +224,7 @@ function saveStandListing(){
  var x={product:g("s-product"),quantity:Number(g("s-quantity")),unit:g("s-unit"),price:Number(g("s-price")),locality:g("s-locality"),description:g("s-description"),photo:standPhotoData,status:"pending",savedAt:new Date().toISOString()};
  var err=document.getElementById("s-error");
  if(!x.product||!x.locality||!(x.quantity>0)||!(x.price>0)){err.textContent="Renseigne le produit, la localité, une quantité et un prix valides.";return}
- standListings.push(x);saveStands();standPhotoData="";toast("Annonce enregistrée, en attente de vérification");render();
+ standListings.push(x);if(!saveStands()){standListings.pop();return}standPhotoData="";toast("Annonce enregistrée sur cet appareil, en attente de vérification");render();
 }
 function vTransport(){
  var cards=transporters.slice().reverse().map(function(x){
@@ -250,7 +250,7 @@ function saveTransporter(){
  var x={name:g("t-name"),vehicle:g("t-vehicle"),capacity:g("t-capacity"),locality:g("t-locality"),routes:g("t-routes"),rate:g("t-rate"),contact:g("t-contact"),availability:g("t-availability"),status:"pending",savedAt:new Date().toISOString()};
  var err=document.getElementById("t-error");
  if(!x.name||!x.capacity||!x.locality||!x.routes){err.textContent="Renseigne le nom, la capacité, le lieu de départ et les destinations.";return}
- transporters.push(x);saveTransporters();toast("Profil transporteur enregistré, en attente de vérification");render();
+ transporters.push(x);if(!saveTransporters()){transporters.pop();return}toast("Profil transporteur enregistré sur cet appareil, en attente de vérification");render();
 }
 
 function vReleves(){
@@ -282,7 +282,7 @@ function saveReleve(){
  if(d.quantity!==""&&!(Number(d.quantity)>0)){err.textContent="La quantité doit être positive ou laissée vide.";return}
  d.marketPrice=Number(d.marketPrice);d.producerPrice=d.producerPrice===""?null:Number(d.producerPrice);d.quantity=d.quantity===""?null:Number(d.quantity);
  d.status="pending";d.savedAt=new Date().toISOString();
- submissions.push(d);saveSubmissions();toast("Relevé enregistré sur cet appareil");render();
+ submissions.push(d);if(!saveSubmissions()){submissions.pop();return}toast("Relevé enregistré sur cet appareil, en attente de vérification");render();
 }
 function vCommandes(){
  if(!S.orders.length)return '<h2>Mes commandes</h2><div class="empty">Aucune commande pour le moment. Choisis un produit dans l’onglet Marché.</div>';
@@ -300,7 +300,7 @@ function adv(id){
 }
 
 
-var WA="2250700081104",deferred=null;
+var WA="",deferred=null;
 function cta(){return '<div class="card" style="margin-top:14px"><strong>Producteur, grossiste ou transporteur ?</strong><div class="muted">Inscris-toi en 1 minute pour rejoindre le marché.</div><button class="btn block" onclick="go(\'inscription\')">Je m’inscris</button></div>'}
 function vInscription(){
  var r={};try{r=JSON.parse(localStorage.getItem("ald-reg")||"{}")}catch(e){}
@@ -315,7 +315,7 @@ function vInscription(){
  '<label for="r-qty">Quantité approximative (facultatif)</label><input id="r-qty" placeholder="Ex. : 2 tonnes par semaine" value="'+v("qty")+'">'+
  '<div class="err" id="r-err"></div>'+
  '<button class="btn block" onclick="register()">Envoyer mon inscription par WhatsApp</button><div id="r-link"></div></div>'+
- '<p class="muted">Ton inscription arrive directement sur le WhatsApp de l’équipe, qui te répond pour valider ton profil.</p>';
+ '<p class="muted">Démonstration : l’envoi WhatsApp sera activé après vérification du numéro officiel de l’équipe. N’inscris pas de données personnelles réelles pour le moment.</p>';
 }
 function register(){
  var g=function(i){return document.getElementById(i).value.trim()};
@@ -340,14 +340,14 @@ if("serviceWorker" in navigator){window.addEventListener("load",function(){navig
 
 function render(){
  var views={inscription:vInscription,marche:vMarche,vendre:vVendre,acheter:vAcheter,commandes:vCommandes,releves:vReleves,stands:vStands,transport:vTransport};
- document.getElementById("app").innerHTML=views[tab]()+'<button class="reset" onclick="resetAll()">Remettre les données de démonstration</button>';
+ document.getElementById("app").innerHTML=views[tab]()+'<button class="reset" onclick="resetAll()">Réinitialiser les stocks et commandes de démonstration</button>';
  document.querySelectorAll("nav button").forEach(function(b){
   if(b.dataset.tab===tab)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current");
  });
  if(tab==="acheter")calc();
  if(tab==="inscription")showInstall();
 }
-function resetAll(){S=clone(SEED);pick=null;save();toast("Données remises à zéro");go("marche")}
+function resetAll(){if(!window.confirm("Réinitialiser uniquement les stocks et commandes de démonstration ? Les stands, transporteurs et relevés enregistrés ne seront pas supprimés."))return;var before=S;S=clone(SEED);pick=null;if(!save()){S=before;return}toast("Stocks et commandes de démonstration réinitialisés");go("marche")}
 document.querySelectorAll("nav button").forEach(function(b){b.addEventListener("click",function(){go(b.dataset.tab)})});
 render();
 </script>
