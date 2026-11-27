@@ -93,7 +93,7 @@ function ready(req, res, next) {
 }
 
 app.get("/api/health", (_req, res) => {
-  res.json({ service: "LOGOFIE MARKET WATCH", status: "online", databaseConfigured: Boolean(db) });
+  res.json({ service: "LOGOFIE MARKET WATCH", status: "online", databaseConfigured: Boolean(db), adminAuthConfigured: Boolean(authClient && adminUserIds.size > 0) });
 });
 
 app.post("/api/submissions", publicLimiter, ready, async (req, res) => {
