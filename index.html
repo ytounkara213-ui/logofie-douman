@@ -77,6 +77,7 @@ nav button[aria-current="page"]{color:var(--green);box-shadow:inset 0 3px 0 var(
 <button data-tab="vendre"><b>📣</b>Vendre</button>
 <button data-tab="acheter"><b>🛒</b>Acheter</button>
 <button data-tab="commandes"><b>🚚</b>Commandes</button>
+<button data-tab="releves"><b>📋</b>Relevés</button>
 <button data-tab="inscription"><b>📝</b>Inscription</button>
 </nav>
 <script>
@@ -91,6 +92,9 @@ var TRANSPORT={"Abidjan":20,"Bouaké":25,"Yamoussoukro":22,"Abengourou":8};
 var COM=0.05;
 var STEPS=["Commande reçue","Chargée au village","En route","Livrée"];
 var S=clone(SEED),tab="marche",pick=null;
+var submissions=[];
+try{submissions=JSON.parse(localStorage.getItem("ald-market-submissions")||"[]");if(!Array.isArray(submissions))submissions=[]}catch(e){submissions=[]}
+function saveSubmissions(){try{localStorage.setItem("ald-market-submissions",JSON.stringify(submissions))}catch(e){}}
 try{var raw=localStorage.getItem("ald-v2");if(raw){var d=JSON.parse(raw);if(d&&d.stocks&&d.orders){S=d}}}catch(e){}
 function clone(o){return JSON.parse(JSON.stringify(o))}
 function save(){try{localStorage.setItem("ald-v2",JSON.stringify(S))}catch(e){}}
@@ -172,6 +176,37 @@ function order(){
  save();toast("Commande enregistrée");go("commandes");
 }
 
+function vReleves(){
+ var units=["kg","sac","bassine","tas","panier","autre"];
+ var options=units.map(function(u){return "<option>"+u+"</option>"}).join("");
+ var items=submissions.slice().reverse().map(function(x){
+  return '<div class="card"><div class="row"><h3>'+esc(x.product)+'</h3><strong>'+F(x.marketPrice)+' / '+esc(x.unit)+'</strong></div><div class="muted">'+esc(x.locality)+' · '+esc(x.market)+' · '+esc(x.date)+'</div><p class="muted">Correspondant : '+esc(x.code)+' · <strong>En attente de vérification</strong></p></div>';
+ }).join("");
+ return '<h2>Transmettre un relevé de prix</h2><p class="muted">Formulaire pilote pour les correspondants d’Aniassué. Les données restent enregistrées sur ce téléphone de démonstration ; elles ne sont pas encore envoyées au serveur.</p><div class="card">'+
+ '<label for="m-code">Code du correspondant</label><select id="m-code"><option>ANI-01</option><option>ANI-02</option><option>ANI-03</option></select>'+
+ '<label for="m-locality">Localité</label><input id="m-locality" value="Aniassué">'+
+ '<label for="m-market">Marché ou lieu du relevé</label><input id="m-market" placeholder="Ex. : marché d’Aniassué">'+
+ '<label for="m-product">Produit</label><input id="m-product" placeholder="Ex. : igname Kponan">'+
+ '<label for="m-producer">Prix payé au producteur (FCFA, facultatif)</label><input id="m-producer" type="number" inputmode="decimal" min="1" placeholder="Facultatif">'+
+ '<label for="m-price">Prix de vente observé (FCFA)</label><input id="m-price" type="number" inputmode="decimal" min="1" required>'+
+ '<label for="m-unit">Unité de prix</label><select id="m-unit">'+options+'</select>'+
+ '<label for="m-quantity">Quantité observée (facultatif)</label><input id="m-quantity" type="number" inputmode="decimal" min="0.01" placeholder="Ex. : 5">'+
+ '<label for="m-date">Date du relevé</label><input id="m-date" type="date" value="'+new Date().toISOString().slice(0,10)+'">'+
+ '<label for="m-notes">Précisions (facultatif)</label><input id="m-notes" maxlength="300" placeholder="Ex. : prix constaté auprès de trois vendeurs">'+
+ '<div class="err" id="m-error"></div><button class="btn block" onclick="saveReleve()">Enregistrer le relevé</button></div>'+
+ '<h2>Relevés enregistrés sur cet appareil</h2>'+(items||'<div class="empty">Aucun relevé pour le moment.</div>');
+}
+function saveReleve(){
+ var g=function(id){return document.getElementById(id).value.trim()};
+ var d={code:g("m-code"),locality:g("m-locality"),market:g("m-market"),product:g("m-product"),producerPrice:g("m-producer"),marketPrice:g("m-price"),unit:g("m-unit"),quantity:g("m-quantity"),date:g("m-date"),notes:g("m-notes")};
+ var err=document.getElementById("m-error");
+ if(!d.locality||!d.market||!d.product||!d.date||!(Number(d.marketPrice)>0)){err.textContent="Vérifie la localité, le marché, le produit, la date et le prix.";return}
+ if(d.producerPrice!==""&&!(Number(d.producerPrice)>0)){err.textContent="Le prix producteur doit être positif ou laissé vide.";return}
+ if(d.quantity!==""&&!(Number(d.quantity)>0)){err.textContent="La quantité doit être positive ou laissée vide.";return}
+ d.marketPrice=Number(d.marketPrice);d.producerPrice=d.producerPrice===""?null:Number(d.producerPrice);d.quantity=d.quantity===""?null:Number(d.quantity);
+ d.status="pending";d.savedAt=new Date().toISOString();
+ submissions.push(d);saveSubmissions();toast("Relevé enregistré sur cet appareil");render();
+}
 function vCommandes(){
  if(!S.orders.length)return '<h2>Mes commandes</h2><div class="empty">Aucune commande pour le moment. Choisis un produit dans l’onglet Marché.</div>';
  return '<h2>Mes commandes</h2>'+S.orders.map(function(o){
@@ -227,7 +262,7 @@ window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();def
 if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}
 
 function render(){
- var views={inscription:vInscription,marche:vMarche,vendre:vVendre,acheter:vAcheter,commandes:vCommandes};
+ var views={inscription:vInscription,marche:vMarche,vendre:vVendre,acheter:vAcheter,commandes:vCommandes,releves:vReleves};
  document.getElementById("app").innerHTML=views[tab]()+'<button class="reset" onclick="resetAll()">Remettre les données de démonstration</button>';
  document.querySelectorAll("nav button").forEach(function(b){
   if(b.dataset.tab===tab)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current");
