@@ -112,12 +112,12 @@ function arrow(t){return t==="up"?'<span class="t-up">↑</span>':t==="down"?'<s
 
 function vMarche(){
  var rows=PRICES.map(function(x){return "<tr><td>"+esc(x.p)+"</td><td>"+F(x.v)+"</td><td>"+F(x.a)+"</td></tr>"}).join("");
- var list=S.stocks.filter(function(s){return s.q>0&&s.status!=="pending"}).map(function(s){
+ var list=S.stocks.filter(function(s){return s.q>0&&s.status!=="pending"&&s.status!=="rejected"}).map(function(s){
   return '<div class="card">'+(s.photo?'<img src="'+s.photo+'" alt="Photo de '+esc(s.p)+'" style="width:100%;max-height:190px;object-fit:cover;border-radius:9px">':'')+
   '<div class="row" style="margin-top:8px"><h3>'+esc(s.p)+'</h3><strong>'+F(s.pr)+'/kg</strong></div>'+
   (s.desc?'<p>'+esc(s.desc)+'</p>':'')+'<div class="muted">'+esc(s.v)+' · '+esc(s.who)+'</div>'+
   '<div class="row" style="margin-top:8px"><span>'+s.q.toLocaleString("fr-FR")+' kg disponibles</span>'+
-  '<span class="muted">En attente de vérification</span></div></div>'}).join("");
+  '<span class="muted">Annonce vérifiée</span></div></div>'}).join("");
  return cta()+'<section class="slate"><h2>Prix de référence, par kilo</h2><small>Prix à la consommation (F CFA/kg)</small>'+
   '<div class="scroll"><table><tr><th>Produit</th><th>Aniassué*</th><th>Abidjan</th></tr>'+rows+'</table></div>'+
   '<small class="price-note">* Aniassué : référence régionale d’Abengourou, et non relevé direct du village. Source : OCPV, semaine du 02 au 08 novembre 2026. Ces prix sont des prix à la consommation, pas des prix garantis aux producteurs. À actualiser dès réception d’un nouveau relevé.</small></section>'+
@@ -169,7 +169,7 @@ function publish(){
 
 function buy(id){pick=id;go("acheter")}
 function vAcheter(){
- var av=S.stocks.filter(function(s){return s.q>0});
+ var av=S.stocks.filter(function(s){return s.q>0&&s.status!=="pending"&&s.status!=="rejected"});
  if(!av.length)return '<h2>Acheter en gros</h2><div class="empty">Aucun stock disponible pour le moment.</div>';
  if(!av.some(function(s){return s.id===pick}))pick=av[0].id;
  var opts=av.map(function(s){return '<option value="'+s.id+'"'+(s.id===pick?" selected":"")+'>'+esc(s.p)+" · "+esc(s.v)+" · "+F(s.pr)+"/kg ("+s.q+" kg)</option>"}).join("");
@@ -183,7 +183,7 @@ function vAcheter(){
  '<p class="muted">Mode démonstration : aucune transaction ni aucun paiement réel n’est effectué. Les tarifs de transport sont des exemples.</p>';
 }
 function calcData(){
- var s=S.stocks.filter(function(x){return x.id===pick})[0];if(!s)return null;
+ var s=S.stocks.filter(function(x){return x.id===pick&&x.q>0&&x.status!=="pending"&&x.status!=="rejected"})[0];if(!s)return null;
  var q=parseInt(document.getElementById("b-q").value,10)||0,d=document.getElementById("b-d").value;
  var goods=q*s.pr,tr=q*TRANSPORT[d],com=Math.round(goods*COM);
  return {s:s,q:q,d:d,goods:goods,tr:tr,com:com,tot:goods+tr+com};
@@ -199,6 +199,7 @@ function calc(){
 }
 function order(){
  var c=calcData(),err=document.getElementById("b-err");if(!c)return;
+ if(c.s.status==="pending"||c.s.status==="rejected"){err.textContent="Ce stock n’est pas validé et ne peut pas être commandé.";return}
  if(!(c.q>0)){err.textContent="Indique une quantité supérieure à 0.";return}
  if(c.q>c.s.q){err.textContent="Il ne reste que "+c.s.q+" kg de "+c.s.p+".";return}
  var oldQuantity=c.s.q,oldNext=S.next;c.s.q-=c.q;
@@ -223,7 +224,7 @@ function vStands(){
  '<label for="s-unit">Unité</label><select id="s-unit"><option>kg</option><option>sac</option><option>tonne</option><option>panier</option><option>tas</option><option>autre</option></select>'+
  '<label for="s-price">Prix demandé (FCFA par unité)</label><input id="s-price" type="number" min="1" inputmode="numeric">'+
  '<label for="s-locality">Village ou ville</label><input id="s-locality" value="Aniassué">'+
- '<label for="s-description">Description (obligatoire)</label><input id="s-description" maxlength="250" placeholder="Qualité, période de récolte, disponibilité…">'+
+ '<label for="s-description">Description (obligatoire)</label><input id="s-description" maxlength="250" placeholder="Qualité, période de récolte, disponibilité…"><label for="s-producer">Nom du producteur (obligatoire)</label><input id="s-producer"><label for="s-contact">Contact du producteur (obligatoire, gardé privé en attente)</label><input id="s-contact" type="tel" inputmode="tel" placeholder="+225 …">'+
  '<div class="err" id="s-error"></div><button class="btn block" onclick="saveStandListing()">Enregistrer mon annonce</button></div>'+
  '<h2>Annonces enregistrées sur cet appareil</h2>'+(cards||'<div class="empty">Aucun stand enregistré pour le moment.</div>');
 }
@@ -245,16 +246,16 @@ function previewStandPhoto(input){
 }
 function saveStandListing(){
  var g=function(id){return document.getElementById(id).value.trim()};
- var x={product:g("s-product"),quantity:Number(g("s-quantity")),unit:g("s-unit"),price:Number(g("s-price")),locality:g("s-locality"),description:g("s-description"),photo:standPhotoData,status:"pending",savedAt:new Date().toISOString()};
+ var x={product:g("s-product"),quantity:Number(g("s-quantity")),unit:g("s-unit"),price:Number(g("s-price")),locality:g("s-locality"),description:g("s-description"),producer:g("s-producer"),contact:g("s-contact"),photo:standPhotoData,status:"pending",savedAt:new Date().toISOString()};
  var err=document.getElementById("s-error");
- if(!x.photo||!x.product||!x.description||!x.locality||!(x.quantity>0)||!(x.price>0)){err.textContent="Photo, produit, description, localité, quantité et prix sont obligatoires.";return}
+ if(!x.photo||!x.product||!x.description||!x.producer||!x.contact||x.contact.replace(/\\D/g,"").length<8||!x.locality||!(x.quantity>0)||!(x.price>0)){err.textContent="Photo, produit, description, producteur, contact valide, localité, quantité et prix sont obligatoires.";return}
  standListings.push(x);if(!saveStands()){standListings.pop();return}standPhotoData="";toast("Annonce enregistrée sur cet appareil, en attente de vérification");render();
 }
 function vTransport(){
  var cards=transporters.slice().reverse().map(function(x){
   return '<div class="card"><div class="row"><h3>'+esc(x.vehicle)+'</h3><strong>'+esc(x.capacity)+'</strong></div>'+
   '<p class="muted">'+esc(x.name)+' · '+esc(x.locality)+'</p><p>'+esc(x.routes)+'</p>'+
-  '<p class="muted">Tarif indicatif : '+esc(x.rate||"À discuter")+' · <strong>En attente de vérification</strong></p></div>';
+  '<p class="muted">Tarif indicatif : '+esc(x.rate||"À discuter")+' · Disponibilité : '+esc(x.availability)+' · <strong>En attente de vérification</strong></p></div>';
  }).join("");
  return '<h2>Espace transporteurs</h2><p class="muted">Inscris ton véhicule et indique les trajets que tu peux assurer. Les profils restent enregistrés sur cet appareil de démonstration.</p>'+
  '<div class="card"><h3>Inscrire un transporteur</h3>'+
@@ -264,7 +265,7 @@ function vTransport(){
  '<label for="t-locality">Ville ou village de départ</label><input id="t-locality" value="Aniassué">'+
  '<label for="t-routes">Destinations desservies</label><input id="t-routes" placeholder="Ex. : Abengourou, Abidjan">'+
  '<label for="t-rate">Tarif indicatif (facultatif)</label><input id="t-rate" placeholder="Ex. : selon la distance">'+
- '<label for="t-contact">Contact WhatsApp (facultatif, non affiché dans la fiche)</label><input id="t-contact" type="tel" inputmode="tel" placeholder="+225 …">'+
+ '<label for="t-contact">Contact WhatsApp (obligatoire, gardé privé en attente)</label><input id="t-contact" type="tel" inputmode="tel" placeholder="+225 …">'+
  '<label for="t-availability">Disponibilité</label><select id="t-availability"><option>Disponible</option><option>Sur réservation</option><option>Indisponible temporairement</option></select>'+
  '<div class="err" id="t-error"></div><button class="btn block" onclick="saveTransporter()">Enregistrer mon profil transporteur</button></div>'+
  '<h2>Profils enregistrés sur cet appareil</h2>'+(cards||'<div class="empty">Aucun transporteur enregistré pour le moment.</div>');
@@ -273,7 +274,7 @@ function saveTransporter(){
  var g=function(id){return document.getElementById(id).value.trim()};
  var x={name:g("t-name"),vehicle:g("t-vehicle"),capacity:g("t-capacity"),locality:g("t-locality"),routes:g("t-routes"),rate:g("t-rate"),contact:g("t-contact"),availability:g("t-availability"),status:"pending",savedAt:new Date().toISOString()};
  var err=document.getElementById("t-error");
- if(!x.name||!x.capacity||!x.locality||!x.routes){err.textContent="Renseigne le nom, la capacité, le lieu de départ et les destinations.";return}
+ if(!x.name||!x.capacity||!x.locality||!x.routes||x.contact.replace(/\\D/g,"").length<8){err.textContent="Renseigne le nom, la capacité, le lieu de départ, les destinations et un contact valide.";return}
  transporters.push(x);if(!saveTransporters()){transporters.pop();return}toast("Profil transporteur enregistré sur cet appareil, en attente de vérification");render();
 }
 
@@ -316,7 +317,7 @@ function vCommandes(){
   return '<div class="card"><div class="row"><h3>'+esc(o.p)+' · '+o.q.toLocaleString("fr-FR")+' kg</h3><strong>'+F(o.tot)+'</strong></div>'+
   '<div class="muted">'+esc(o.v)+' → '+esc(o.d)+'</div><div class="steps" aria-hidden="true">'+dots+'</div>'+
   '<div><strong>'+STEPS[o.step]+'</strong></div>'+
-  (done?'<div class="muted">Paiement versé au producteur.</div>':'<button class="btn ghost block" onclick="adv('+o.id+')">Passer à l’étape suivante</button>')+'</div>'}).join("");
+  (done?'<div class="muted">Simulation de livraison terminée. Aucun paiement réel n’a été effectué.</div>':'<button class="btn ghost block" onclick="adv('+o.id+')">Simuler l’étape suivante</button>')+'</div>'}).join("");
 }
 function adv(id){
  var before=clone(S);S.orders.forEach(function(o){if(o.id===id&&o.step<STEPS.length-1)o.step++});
@@ -338,8 +339,8 @@ function vInscription(){
  '<label for="r-act">Mes produits ou mon activité</label><input id="r-act" placeholder="Ex. : igname, manioc ; ou camion 5 tonnes" value="'+v("act")+'">'+
  '<label for="r-qty">Quantité approximative (facultatif)</label><input id="r-qty" placeholder="Ex. : 2 tonnes par semaine" value="'+v("qty")+'">'+
  '<div class="err" id="r-err"></div>'+
- '<button class="btn block" onclick="register()">Envoyer mon inscription par WhatsApp</button><div id="r-link"></div></div>'+
- '<p class="muted">Pour un profil Producteur, au moins une annonce complète avec photo réelle, description, quantité, prix et localité est obligatoire avant l’inscription. Démonstration : l’envoi WhatsApp sera activé après vérification du numéro officiel de l’équipe. N’inscris pas de données personnelles réelles pour le moment.</p>';
+ '<button class="btn block" onclick="register()">Enregistrer mon inscription (démo)</button><div id="r-link"></div></div>'+
+ '<p class="muted">Pour un profil Producteur, au moins une annonce complète avec photo réelle, description, quantité, prix et localité est obligatoire. Cette inscription est enregistrée uniquement sur cet appareil en mode démonstration. Aucun message WhatsApp ni compte partagé n’est créé.</p>';
 }
 function register(){
  var g=function(i){return document.getElementById(i).value.trim()};
