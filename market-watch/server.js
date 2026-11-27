@@ -221,6 +221,133 @@ app.post("/api/admin/submissions/:id/decision", adminLimiter, requireAdmin, read
 });
 
 
+
+function validPhone(value) {
+  const digits = String(value || "").replace(/\\D/g, "");
+  return digits.length >= 8 && digits.length <= 15;
+}
+
+app.post("/api/registrations", publicLimiter, ready, async (req, res) => {
+  const body = req.body || {};
+  const role = cleanText(body.role, 40);
+  const name = cleanText(body.name, 100);
+  const phone = cleanText(body.phone, 30);
+  const locality = cleanText(body.locality, 100);
+  const activity = cleanText(body.activity, 180);
+  const quantity = cleanText(body.quantity, 100);
+  if (!["producer", "buyer", "transporter"].includes(role)
+      || name.length < 2 || !validPhone(phone) || !locality || !activity) {
+    return res.status(400).json({ error: "Rôle, nom, contact, localité ou activité invalide." });
+  }
+  const { data, error } = await db.from("partner_registrations").insert({
+    role, name, phone, locality, activity, quantity: quantity || null, status: "pending"
+  }).select("id,status,created_at").single();
+  if (error) {
+    console.error("registration insert:", error.message);
+    return res.status(500).json({ error: "Impossible d'enregistrer l'inscription." });
+  }
+  return res.status(201).json({ message: "Inscription reçue et en attente de validation.", registration: data });
+});
+
+app.post("/api/products", publicLimiter, ready, async (req, res) => {
+  const body = req.body || {};
+  const product = cleanText(body.product, 100);
+  const description = cleanText(body.description, 500);
+  const producer = cleanText(body.producer, 100);
+  const phone = cleanText(body.phone, 30);
+  const locality = cleanText(body.locality, 100);
+  const photoUrl = cleanText(body.photo_url, 500);
+  const quantity = Number(body.quantity);
+  const unit = cleanText(body.unit || "kg", 20);
+  const price = Number(body.price);
+  if (!product || !description || !producer || !validPhone(phone) || !locality
+      || !Number.isFinite(quantity) || quantity <= 0 || !unit
+      || !Number.isFinite(price) || price <= 0 || !/^https:\\/\\//i.test(photoUrl)) {
+    return res.status(400).json({ error: "Informations du produit, photo HTTPS, quantité, prix ou contact invalides." });
+  }
+  const { data, error } = await db.from("product_listings").insert({
+    product, description, producer, phone, locality, photo_url: photoUrl,
+    quantity, unit, price, status: "pending"
+  }).select("id,status,created_at").single();
+  if (error) {
+    console.error("product insert:", error.message);
+    return res.status(500).json({ error: "Impossible d'enregistrer le produit." });
+  }
+  return res.status(201).json({ message: "Produit reçu et en attente de validation.", product: data });
+});
+
+app.post("/api/transporters", publicLimiter, ready, async (req, res) => {
+  const body = req.body || {};
+  const name = cleanText(body.name, 100);
+  const phone = cleanText(body.phone, 30);
+  const vehicle = cleanText(body.vehicle, 60);
+  const capacity = cleanText(body.capacity, 80);
+  const locality = cleanText(body.locality, 100);
+  const routes = cleanText(body.routes, 250);
+  const rate = cleanText(body.rate, 100);
+  const availability = cleanText(body.availability, 60);
+  if (!name || !validPhone(phone) || !vehicle || !capacity || !locality || !routes || !availability) {
+    return res.status(400).json({ error: "Profil transporteur incomplet ou invalide." });
+  }
+  const { data, error } = await db.from("transporter_profiles").insert({
+    name, phone, vehicle, capacity, locality, routes, rate: rate || null,
+    availability, status: "pending"
+  }).select("id,status,created_at").single();
+  if (error) {
+    console.error("transporter insert:", error.message);
+    return res.status(500).json({ error: "Impossible d'enregistrer le profil transporteur." });
+  }
+  return res.status(201).json({ message: "Profil reçu et en attente de validation.", transporter: data });
+});
+
+app.get("/api/admin/market/queue", adminLimiter, requireAdmin, ready, async (_req, res) => {
+  const tables = [
+    ["registrations", "partner_registrations"],
+    ["products", "product_listings"],
+    ["transporters", "transporter_profiles"]
+  ];
+  const results = await Promise.all(tables.map(async ([key, table]) => {
+    const { data, error } = await db.from(table).select("*")
+      .eq("status", "pending").order("created_at", { ascending: true }).limit(100);
+    return { key, data: data || [], error };
+  }));
+  const failed = results.find(x => x.error);
+  if (failed) {
+    console.error("admin market queue:", failed.error.message);
+    return res.status(500).json({ error: "Impossible de charger les demandes en attente." });
+  }
+  const queue = {};
+  for (const item of results) queue[item.key] = item.data;
+  return res.json({ queue, note: "Données personnelles visibles uniquement dans cet endpoint administrateur protégé." });
+});
+
+app.post("/api/admin/market/:resource/:id/decision", adminLimiter, requireAdmin, ready, async (req, res) => {
+  const tables = {
+    registrations: "partner_registrations",
+    products: "product_listings",
+    transporters: "transporter_profiles"
+  };
+  const table = tables[req.params.resource];
+  const id = cleanText(req.params.id, 50);
+  const decision = req.body?.decision;
+  const reviewNote = cleanText(req.body?.review_note, 500);
+  if (!table || !/^[0-9a-f-]{36}$/i.test(id) || !["approve", "reject"].includes(decision)) {
+    return res.status(400).json({ error: "Ressource, identifiant ou décision invalide." });
+  }
+  const { data, error } = await db.from(table).update({
+    status: decision === "approve" ? "approved" : "rejected",
+    reviewed_at: new Date().toISOString(),
+    review_note: reviewNote || null
+  }).eq("id", id).eq("status", "pending")
+    .select("id,status").maybeSingle();
+  if (error) {
+    console.error("admin market decision:", error.message);
+    return res.status(500).json({ error: "Impossible d'enregistrer la décision." });
+  }
+  if (!data) return res.status(404).json({ error: "Demande introuvable ou déjà traitée." });
+  return res.json({ message: decision === "approve" ? "Demande validée." : "Demande refusée.", item: data });
+});
+
 app.get("/api/admin/finance/summary", adminLimiter, requireAdmin, ready, async (_req, res) => {
   const { data, error } = await db.from("finance_entries")
     .select("entry_type,gross_amount,commission_amount,status")
