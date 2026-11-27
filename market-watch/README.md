@@ -25,14 +25,15 @@ Cette version constitue le socle technique. Elle ne récupère pas encore automa
 
 Prérequis : Node.js 20 ou supérieur et un projet Supabase.
 
-1. Dans Supabase, ouvrir le SQL Editor et exécuter le contenu de `schema.sql`.
-2. Copier `.env.example` vers `.env`.
-3. Renseigner les variables :
+1. Dans Supabase, ouvrir le SQL Editor et exécuter `schema.sql`.
+2. Exécuter `review_submission_rpc.sql` pour sécuriser les validations et empêcher les doubles publications.
+3. Copier `.env.example` vers `.env`.
+4. Renseigner les variables :
    - `SUPABASE_URL`
    - `SUPABASE_SERVICE_ROLE_KEY`
    - `ADMIN_API_KEY` (secret long, aléatoire et conservé côté serveur uniquement)
    - `FRONTEND_ORIGIN` (origine autorisée de l'application)
-4. Installer et lancer :
+5. Installer et lancer :
    ```bash
    npm install
    npm start
@@ -105,4 +106,4 @@ Les routes financières exigent la clé administrateur dans l'en-tête `Authoriz
 
 ## État du projet
 
-Socle API préparé, non encore déployé. La base Supabase, les variables serveur, le test réel des routes et le raccordement à l'application restent à effectuer.
+La migration `review_submission_rpc.sql` doit être exécutée après `schema.sql` avant d'utiliser la validation des relevés. Le socle API est préparé, non encore déployé. La base Supabase, les variables serveur, le test réel des routes et le raccordement à l'application restent à effectuer.
