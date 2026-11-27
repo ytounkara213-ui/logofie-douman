@@ -339,13 +339,14 @@ function vInscription(){
  '<label for="r-qty">Quantité approximative (facultatif)</label><input id="r-qty" placeholder="Ex. : 2 tonnes par semaine" value="'+v("qty")+'">'+
  '<div class="err" id="r-err"></div>'+
  '<button class="btn block" onclick="register()">Envoyer mon inscription par WhatsApp</button><div id="r-link"></div></div>'+
- '<p class="muted">Démonstration : l’envoi WhatsApp sera activé après vérification du numéro officiel de l’équipe. N’inscris pas de données personnelles réelles pour le moment.</p>';
+ '<p class="muted">Pour un profil Producteur, au moins une annonce complète avec photo réelle, description, quantité, prix et localité est obligatoire avant l’inscription. Démonstration : l’envoi WhatsApp sera activé après vérification du numéro officiel de l’équipe. N’inscris pas de données personnelles réelles pour le moment.</p>';
 }
 function register(){
  var g=function(i){return document.getElementById(i).value.trim()};
  var r={role:g("r-role"),name:g("r-name"),tel:g("r-tel"),vil:g("r-vil"),act:g("r-act"),qty:g("r-qty")},err=document.getElementById("r-err");
  if(!r.name||!r.vil||!r.act){err.textContent="Renseigne ton nom, ton village ou ta ville, et tes produits.";return}
  if(r.tel.replace(/\D/g,"").length<8){err.textContent="Entre un numéro WhatsApp valide.";return}
+ if(r.role==="Producteur"&&!S.stocks.concat(standListings).some(function(x){return !!x.photo&&!!(x.desc||x.description)&&!!x.p&&!!(x.q||x.quantity)&&!!(x.pr||x.price)&&!!(x.v||x.locality)})){err.textContent="Inscription refusée : ajoute d’abord au moins un produit avec photo et toutes ses informations dans Vendre ou Stands.";return}
  if(!WA){err.textContent="Envoi désactivé : le numéro officiel WhatsApp de l’équipe doit d’abord être vérifié.";return}
  err.textContent="";
  var m="Inscription Aniassué lôgôfié douman\nProfil : "+r.role+"\nNom : "+r.name+"\nTéléphone : "+r.tel+"\nVillage / ville : "+r.vil+"\nProduits / activité : "+r.act+(r.qty?"\nQuantité approximative : "+r.qty:"");
