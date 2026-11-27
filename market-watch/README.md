@@ -50,6 +50,17 @@ Ne jamais publier le fichier `.env`, la clé service-role ou la clé administrat
 - `POST /api/admin/finance/entries` : enregistrer une écriture de suivi financier (administrateur).
 - `GET /api/admin/finance/summary` : consulter les totaux du suivi financier (administrateur).
 
+## Espace d'administration — inscriptions et annonces
+
+La migration `admin_market_schema.sql` crée les tables privées pour les inscriptions, les produits et les profils transporteurs.
+
+1. Exécuter `admin_market_schema.sql` dans Supabase après `schema.sql`.
+2. Les formulaires serveur disponibles sont `POST /api/registrations`, `POST /api/products` et `POST /api/transporters`.
+3. L'administrateur peut consulter les demandes en attente via `GET /api/admin/market/queue`.
+4. Une décision est enregistrée via `POST /api/admin/market/:resource/:id/decision`, avec `resource` égal à `registrations`, `products` ou `transporters` et `decision` égal à `approve` ou `reject`.
+
+Ces routes sont protégées par `ADMIN_API_KEY` côté serveur. Les données personnelles ne sont pas exposées dans les réponses publiques. Cette étape prépare le backend : les formulaires actuels de GitHub Pages restent encore en mode local de démonstration et ne sont pas raccordés à ces nouvelles routes. Il faut donc déployer et tester l'API, exécuter la migration et réaliser le raccordement de l'interface avant toute utilisation réelle. Les comptes et services externes doivent être configurés avec un adulte responsable.
+
 ## LOGÔFIÉ GESTION — suivi financier préparatoire
 
 Après avoir exécuté `schema.sql`, exécuter également `finance_schema.sql` dans le SQL Editor Supabase.
