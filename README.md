@@ -33,6 +33,18 @@ Le site public reste un **prototype de démonstration**. Les données saisies da
 
 **Important :** ne jamais publier une clé Supabase service-role, une clé administrateur, un mot de passe ou un fichier `.env` dans le dépôt ou dans le navigateur. La configuration des comptes et paiements éventuels doit être accompagnée par un adulte responsable.
 
+## LOGÔFIÉ GESTION — suivi des revenus
+
+Un premier socle de suivi financier est ajouté dans `market-watch/` :
+
+- Migration SQL : `market-watch/finance_schema.sql`.
+- Enregistrement administrateur des ventes, transports et dépenses.
+- Calcul des commissions déclaratives selon le taux saisi.
+- Distinction entre commissions en attente et commissions acquises.
+- Calcul d'un résultat estimatif après dépenses enregistrées.
+
+Les taux pilotes de 2 % sur les ventes et 5 % sur les transports restent des hypothèses à discuter et à accepter par les participants. Aucun prélèvement ni paiement n'est réalisé par ce module. La base Supabase et l'API doivent être configurées et testées avant utilisation. La clé administrateur reste exclusivement côté serveur.
+
 ## LOGOFIE MARKET WATCH
 
 - Rythme pilote : mardi et jeudi, samedi facultatif.
