@@ -223,7 +223,7 @@ app.post("/api/admin/submissions/:id/decision", adminLimiter, requireAdmin, read
 
 
 function validPhone(value) {
-  const digits = String(value || "").replace(/\\D/g, "");
+  const digits = String(value || "").replace(/\D/g, "");
   return digits.length >= 8 && digits.length <= 15;
 }
 
