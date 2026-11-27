@@ -112,7 +112,7 @@ function arrow(t){return t==="up"?'<span class="t-up">↑</span>':t==="down"?'<s
 
 function vMarche(){
  var rows=PRICES.map(function(x){return "<tr><td>"+esc(x.p)+"</td><td>"+F(x.v)+"</td><td>"+F(x.a)+"</td></tr>"}).join("");
- var list=S.stocks.filter(function(s){return s.q>0&&s.status!=="pending"&&s.status!=="rejected"}).map(function(s){
+ var list=S.stocks.filter(function(s){return s.q>0&&s.status==="approved"}).map(function(s){
   return '<div class="card">'+(s.photo?'<img src="'+s.photo+'" alt="Photo de '+esc(s.p)+'" style="width:100%;max-height:190px;object-fit:cover;border-radius:9px">':'')+
   '<div class="row" style="margin-top:8px"><h3>'+esc(s.p)+'</h3><strong>'+F(s.pr)+'/kg</strong></div>'+
   (s.desc?'<p>'+esc(s.desc)+'</p>':'')+'<div class="muted">'+esc(s.v)+' · '+esc(s.who)+'</div>'+
@@ -169,7 +169,7 @@ function publish(){
 
 function buy(id){pick=id;go("acheter")}
 function vAcheter(){
- var av=S.stocks.filter(function(s){return s.q>0&&s.status!=="pending"&&s.status!=="rejected"});
+ var av=S.stocks.filter(function(s){return s.q>0&&s.status==="approved"});
  if(!av.length)return '<h2>Acheter en gros</h2><div class="empty">Aucun stock disponible pour le moment.</div>';
  if(!av.some(function(s){return s.id===pick}))pick=av[0].id;
  var opts=av.map(function(s){return '<option value="'+s.id+'"'+(s.id===pick?" selected":"")+'>'+esc(s.p)+" · "+esc(s.v)+" · "+F(s.pr)+"/kg ("+s.q+" kg)</option>"}).join("");
@@ -183,7 +183,7 @@ function vAcheter(){
  '<p class="muted">Mode démonstration : aucune transaction ni aucun paiement réel n’est effectué. Les tarifs de transport sont des exemples.</p>';
 }
 function calcData(){
- var s=S.stocks.filter(function(x){return x.id===pick&&x.q>0&&x.status!=="pending"&&x.status!=="rejected"})[0];if(!s)return null;
+ var s=S.stocks.filter(function(x){return x.id===pick&&x.q>0&&x.status==="approved"})[0];if(!s)return null;
  var q=parseInt(document.getElementById("b-q").value,10)||0,d=document.getElementById("b-d").value;
  var goods=q*s.pr,tr=q*TRANSPORT[d],com=Math.round(goods*COM);
  return {s:s,q:q,d:d,goods:goods,tr:tr,com:com,tot:goods+tr+com};
@@ -212,7 +212,7 @@ function vStands(){
  var cards=standListings.slice().reverse().map(function(x){
   return '<div class="card">'+(x.photo?'<img src="'+x.photo+'" alt="Photo de '+esc(x.product)+'" style="width:100%;max-height:210px;object-fit:cover;border-radius:9px">':'')+
   '<div class="row" style="margin-top:8px"><h3>'+esc(x.product)+'</h3><strong>'+F(x.price)+' / '+esc(x.unit)+'</strong></div>'+
-  '<p class="muted">'+esc(x.locality)+' · '+esc(x.quantity)+' '+esc(x.unit)+' disponibles</p>'+
+  '<p class="muted">'+esc(x.locality)+' · '+esc(x.quantity)+' '+esc(x.unit)+' disponibles</p><p class="muted">Producteur : '+esc(x.producer||"À confirmer")+'</p>'+
   (x.description?'<p>'+esc(x.description)+'</p>':'')+
   '<p class="muted"><strong>En attente de vérification</strong> · Annonce enregistrée sur cet appareil</p></div>';
  }).join("");
