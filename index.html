@@ -248,7 +248,7 @@ function saveStandListing(){
  var g=function(id){return document.getElementById(id).value.trim()};
  var x={product:g("s-product"),quantity:Number(g("s-quantity")),unit:g("s-unit"),price:Number(g("s-price")),locality:g("s-locality"),description:g("s-description"),producer:g("s-producer"),contact:g("s-contact"),photo:standPhotoData,status:"pending",savedAt:new Date().toISOString()};
  var err=document.getElementById("s-error");
- if(!x.photo||!x.product||!x.description||!x.producer||!x.contact||x.contact.replace(/\\D/g,"").length<8||!x.locality||!(x.quantity>0)||!(x.price>0)){err.textContent="Photo, produit, description, producteur, contact valide, localité, quantité et prix sont obligatoires.";return}
+ if(!x.photo||!x.product||!x.description||!x.producer||!x.contact||x.contact.replace(/\D/g,"").length<8||!x.locality||!(x.quantity>0)||!(x.price>0)){err.textContent="Photo, produit, description, producteur, contact valide, localité, quantité et prix sont obligatoires.";return}
  standListings.push(x);if(!saveStands()){standListings.pop();return}standPhotoData="";toast("Annonce enregistrée sur cet appareil, en attente de vérification");render();
 }
 function vTransport(){
@@ -274,7 +274,7 @@ function saveTransporter(){
  var g=function(id){return document.getElementById(id).value.trim()};
  var x={name:g("t-name"),vehicle:g("t-vehicle"),capacity:g("t-capacity"),locality:g("t-locality"),routes:g("t-routes"),rate:g("t-rate"),contact:g("t-contact"),availability:g("t-availability"),status:"pending",savedAt:new Date().toISOString()};
  var err=document.getElementById("t-error");
- if(!x.name||!x.capacity||!x.locality||!x.routes||x.contact.replace(/\\D/g,"").length<8){err.textContent="Renseigne le nom, la capacité, le lieu de départ, les destinations et un contact valide.";return}
+ if(!x.name||!x.capacity||!x.locality||!x.routes||x.contact.replace(/\D/g,"").length<8){err.textContent="Renseigne le nom, la capacité, le lieu de départ, les destinations et un contact valide.";return}
  transporters.push(x);if(!saveTransporters()){transporters.pop();return}toast("Profil transporteur enregistré sur cet appareil, en attente de vérification");render();
 }
 
