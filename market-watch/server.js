@@ -17,7 +17,8 @@ app.disable("x-powered-by");
 app.use(helmet());
 app.use(cors({
   origin(origin, callback) {
-    if (!origin || !frontendOrigin || origin === frontendOrigin) return callback(null, true);
+    if (!origin) return callback(null, true);
+    if (frontendOrigin && origin === frontendOrigin) return callback(null, true);
     return callback(new Error("Origin not allowed"));
   },
   methods: ["GET", "POST", "OPTIONS"],
@@ -65,8 +66,12 @@ function cleanText(value, max = 100) {
 }
 
 function validDate(value) {
-  return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)
-    && !Number.isNaN(Date.parse(value));
+  if (typeof value !== "string" || !/^\\d{4}-\\d{2}-\\d{2}$/.test(value)) return false;
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return date.getUTCFullYear() === year
+    && date.getUTCMonth() === month - 1
+    && date.getUTCDate() === day;
 }
 
 function ready(req, res, next) {
@@ -163,64 +168,25 @@ app.post("/api/admin/submissions/:id/decision", adminLimiter, requireAdmin, read
   const id = cleanText(req.params.id, 50);
   const decision = req.body?.decision;
   const reviewNote = cleanText(req.body?.review_note, 500);
-  if (!/^[0-9a-f-]{36}$/i.test(id) || !["approve", "reject"].includes(decision)) {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)
+      || !["approve", "reject"].includes(decision)) {
     return res.status(400).json({ error: "Identifiant ou décision invalide." });
   }
-
-  const { data: submission, error: readError } = await db.from("market_submissions")
-    .select("*").eq("id", id).eq("status", "pending").maybeSingle();
-  if (readError) {
-    console.error("submission read:", readError.message);
-    return res.status(500).json({ error: "Impossible de vérifier ce relevé." });
+  const { data, error } = await db.rpc("review_market_submission", {
+    p_submission_id: id, p_decision: decision, p_review_note: reviewNote || null
+  });
+  if (error) {
+    console.error("submission decision:", error.message);
+    return res.status(500).json({ error: "Impossible de traiter ce relevé. Vérifiez que la migration de sécurisation est installée." });
   }
-  if (!submission) return res.status(404).json({ error: "Relevé introuvable ou déjà traité." });
-
-  if (decision === "reject") {
-    const { error } = await db.from("market_submissions")
-      .update({ status: "rejected", reviewed_at: new Date().toISOString(), review_note: reviewNote || null })
-      .eq("id", id).eq("status", "pending");
-    if (error) {
-      console.error("submission reject:", error.message);
-      return res.status(500).json({ error: "Impossible de refuser ce relevé." });
-    }
+  if (!data || data.outcome === "not_found") {
+    return res.status(404).json({ error: "Relevé introuvable ou déjà traité." });
+  }
+  if (data.outcome === "rejected") {
     return res.json({ message: "Relevé refusé. Aucun prix n'a été publié." });
   }
-
-  const { data: published, error: publishError } = await db.from("market_prices")
-    .insert({
-      locality: submission.locality,
-      market_name: submission.market_name,
-      product: submission.product,
-      producer_price: submission.producer_price,
-      market_price: submission.market_price,
-      unit: submission.unit,
-      observed_at: submission.observed_at,
-      source_type: "local_correspondent",
-      source_label: submission.correspondent_code
-        ? "Correspondant " + submission.correspondent_code
-        : "Correspondant local",
-      submission_id: submission.id
-    }).select("id").single();
-
-  if (publishError) {
-    console.error("price publish:", publishError.message);
-    return res.status(500).json({ error: "Publication impossible. Le relevé reste à vérifier." });
-  }
-
-  const { error: updateError } = await db.from("market_submissions")
-    .update({ status: "approved", reviewed_at: new Date().toISOString(), review_note: reviewNote || null })
-    .eq("id", id).eq("status", "pending");
-  if (updateError) {
-    console.error("submission approve:", updateError.message);
-    return res.status(500).json({
-      error: "Le prix a été créé, mais le statut du relevé doit être contrôlé dans l'administration.",
-      publishedPriceId: published.id
-    });
-  }
-  return res.json({ message: "Prix validé et publié.", priceId: published.id });
+  return res.json({ message: "Prix validé et publié.", priceId: data.price_id });
 });
-
-
 
 function validPhone(value) {
   const digits = String(value || "").replace(/\D/g, "");
@@ -403,11 +369,16 @@ app.post("/api/admin/finance/entries", adminLimiter, requireAdmin, ready, async 
   const transactionDate = body.transaction_date || new Date().toISOString().slice(0, 10);
   const notes = cleanText(body.notes, 500);
 
+  const allowedStatuses = {
+    sale: ["pending", "confirmed", "cancelled"],
+    transport: ["pending", "completed", "cancelled"],
+    expense: ["pending", "completed", "cancelled"]
+  };
   if (!["sale", "transport", "expense"].includes(entryType)
       || label.length < 2
       || !Number.isFinite(amount) || amount <= 0
       || !Number.isFinite(rate) || rate < 0 || rate > 10
-      || !["pending", "confirmed", "completed", "cancelled"].includes(status)
+      || !allowedStatuses[entryType]?.includes(status)
       || !validDate(transactionDate)
       || (entryType === "expense" && rate !== 0)) {
     return res.status(400).json({ error: "Type, libellé, montant, taux, statut ou date invalide." });
