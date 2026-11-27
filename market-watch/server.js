@@ -56,7 +56,7 @@ async function requireAdmin(req, res, next) {
   if (!authClient || adminUserIds.size === 0) {
     return res.status(503).json({ error: "Authentification administrateur non configurée." });
   }
-  const match = /^Bearer\\s+(.+)$/i.exec(req.get("authorization") || "");
+  const match = /^Bearer\s+(.+)$/i.exec(req.get("authorization") || "");
   if (!match) return res.status(401).json({ error: "Connexion administrateur requise." });
 
   try {
