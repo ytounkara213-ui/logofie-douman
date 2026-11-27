@@ -240,13 +240,14 @@ function vTransport(){
  '<label for="t-locality">Ville ou village de départ</label><input id="t-locality" value="Aniassué">'+
  '<label for="t-routes">Destinations desservies</label><input id="t-routes" placeholder="Ex. : Abengourou, Abidjan">'+
  '<label for="t-rate">Tarif indicatif (facultatif)</label><input id="t-rate" placeholder="Ex. : selon la distance">'+
+ '<label for="t-contact">Contact WhatsApp (facultatif, non affiché dans la fiche)</label><input id="t-contact" type="tel" inputmode="tel" placeholder="+225 …">'+
  '<label for="t-availability">Disponibilité</label><select id="t-availability"><option>Disponible</option><option>Sur réservation</option><option>Indisponible temporairement</option></select>'+
  '<div class="err" id="t-error"></div><button class="btn block" onclick="saveTransporter()">Enregistrer mon profil transporteur</button></div>'+
  '<h2>Profils enregistrés sur cet appareil</h2>'+(cards||'<div class="empty">Aucun transporteur enregistré pour le moment.</div>');
 }
 function saveTransporter(){
  var g=function(id){return document.getElementById(id).value.trim()};
- var x={name:g("t-name"),vehicle:g("t-vehicle"),capacity:g("t-capacity"),locality:g("t-locality"),routes:g("t-routes"),rate:g("t-rate"),availability:g("t-availability"),status:"pending",savedAt:new Date().toISOString()};
+ var x={name:g("t-name"),vehicle:g("t-vehicle"),capacity:g("t-capacity"),locality:g("t-locality"),routes:g("t-routes"),rate:g("t-rate"),contact:g("t-contact"),availability:g("t-availability"),status:"pending",savedAt:new Date().toISOString()};
  var err=document.getElementById("t-error");
  if(!x.name||!x.capacity||!x.locality||!x.routes){err.textContent="Renseigne le nom, la capacité, le lieu de départ et les destinations.";return}
  transporters.push(x);saveTransporters();toast("Profil transporteur enregistré, en attente de vérification");render();
